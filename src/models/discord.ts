@@ -14,5 +14,7 @@ export interface Command {
 
 export class ExtendedClient extends Client {
     public commands: Collection<string, Command> = new Collection();
+    public ongoingBattles: Set<string> = new Set();
+    public playerFavouriteSongs: Map<string, string> = new Map();
 }
 
