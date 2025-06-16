@@ -17,4 +17,3 @@ export class ExtendedClient extends Client {
     public ongoingBattles: Set<string> = new Set();
     public playerFavouriteSongs: Map<string, string> = new Map();
 }
-

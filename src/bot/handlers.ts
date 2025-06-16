@@ -4,6 +4,7 @@ import {getExtendedClient} from "../utils/client";
 import path from "node:path";
 import fs from "node:fs";
 import logger from "../utils/logger";
+import {safeGetSubcommand} from "../utils/discord";
 
 export function registerHandlers(client: ExtendedClient) {
 
@@ -44,7 +45,7 @@ export function registerHandlers(client: ExtendedClient) {
 }
 
 
-const handleChatInputCommand = async (interaction: ChatInputCommandInteraction) => {
+async function handleChatInputCommand(interaction: ChatInputCommandInteraction){
     const client = getExtendedClient(interaction.client);
     const command = client.commands.get(interaction.commandName);
 
@@ -52,6 +53,8 @@ const handleChatInputCommand = async (interaction: ChatInputCommandInteraction) 
         logger.error(`No command matching ${interaction.commandName} was found`);
         return;
     }
+    const subcommand = safeGetSubcommand(interaction);
+    logger.info(`[COMMAND] /${interaction.commandName}${subcommand ? ` ${subcommand}` : ''} | by: ${interaction.user.id} (${interaction.user.username})`);
 
     try {
         await command.execute(interaction);
@@ -69,9 +72,9 @@ const handleChatInputCommand = async (interaction: ChatInputCommandInteraction) 
             });
         }
     }
-};
+}
 
-const handleAutocomplete = async (interaction: AutocompleteInteraction) => {
+async function handleAutocomplete(interaction: AutocompleteInteraction){
     const client = getExtendedClient(interaction.client);
     const command = client.commands.get(interaction.commandName);
     if (!command) {
@@ -87,4 +90,4 @@ const handleAutocomplete = async (interaction: AutocompleteInteraction) => {
     } catch (err) {
         logger.error({err: err}, `There was an error while executing ${interaction.commandName} autocomplete handler`);
     }
-};
+}
