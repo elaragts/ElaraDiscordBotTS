@@ -1,6 +1,6 @@
 ﻿import fs from "node:fs";
 import {MusicinfoItem, SongInfo} from "../models/datatable";
-import {Language} from "../constants/datatable";
+import {Language, songResultSeparator} from "../constants/datatable";
 
 import {musicinfoPath, wordlistPath} from "../../config.json";
 
@@ -69,14 +69,14 @@ function initializeWordlist() {
         throw new Error(`Invalid JSON in wordlist file: ${err}`);
     }
     for (const item of parsedWordlist.items) {
-        const key = item.key
-        if (key.startsWith('song') && !key.startsWith('song_sub') && !key.startsWith('song_detail')) {
+        const key = item.key;
+        if (key.startsWith("song") && !key.startsWith("song_sub") && !key.startsWith("song_detail")) {
             const id = key.slice(5); //remove song_ from id
             const uniqueId = songIdMap.get(id);
             if (uniqueId === undefined) {
                 continue;
             }
-            songTitles.set(uniqueId, [item.japaneseText, item.englishUsText])
+            songTitles.set(uniqueId, [item.japaneseText, item.englishUsText]);
         }
     }
 }
@@ -87,21 +87,21 @@ export function searchSong(query: string): Promise<Array<[string, string]>> {
 }
 
 export function searchSongSync(query: string): Array<[string, string]> {
-    if (query === '') return [];
+    if (query === "") return [];
     query = query.toLowerCase();
     let results: Array<[string, string]> = []; // Return array
     for (const [uniqueId, titles] of songTitles.entries()) {
         for (const i in titles) {
             if (titles[i].toLowerCase() === query) {
-                return [[titles[i], `${uniqueId}|${i}`]];
+                return [[titles[i], `${uniqueId}${songResultSeparator}${i}`]];
             }
             if (titles[i].toLowerCase().includes(query)) {
                 // Append the song for a partial match
-                if (results.length < 10) results.push([titles[i], `${uniqueId}|${i}`]); // Limit results to 10
+                if (results.length < 10) results.push([titles[i], `${uniqueId}${songResultSeparator}${i}`]); // Limit results to 10
             }
         }
     }
-    return results
+    return results;
 }
 
 export function isValidLang(lang: number): boolean {
@@ -123,5 +123,10 @@ export function getSongInfo(uniqueId: number): SongInfo | undefined {
     return {
         songTitles: songTitleResult,
         musicinfo: musicinfo.get(uniqueId)!
-    }
+    };
+}
+
+export function getSongTitle(uniqueId: number, lang: Language): string {
+    const titles = songTitles.get(uniqueId);
+    return titles !== undefined ? titles[lang] : "";
 }

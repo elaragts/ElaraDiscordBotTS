@@ -36,7 +36,9 @@ export function validateConfig(): void {
         guildId: "string",
         botChannelId: "string",
         musicinfoPath: "string",
-        wordlistPath: "string"
+        wordlistPath: "string",
+        serverBoostRoleId: "string",
+        adminRoleId: "string",
     };
 
     const errors: string[] = [];

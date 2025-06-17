@@ -2,6 +2,8 @@
 import {doesUniqueIdExist, isValidLang, searchSong, searchSongSync} from "./datatable";
 import logger from "./logger";
 import {songResultSeparator} from "../constants/datatable";
+import {client} from "../bot/client";
+import {guildId, adminRoleId, serverBoostRoleId} from "../../config.json"
 
 export async function replyWithErrorMessage(interaction: ChatInputCommandInteraction, author: string, reason: string): Promise<void> {
     const errorEmbed = {
@@ -94,4 +96,14 @@ export async function validateSongInput(interaction: ChatInputCommandInteraction
         [uniqueId, lang] = (await validateSongInput(interaction, songInput, result))!; //this is stupid but works
     }
     return [uniqueId, lang]
+}
+
+export function isUserBoostingServer(userId: string): boolean {
+    const guild = client.guilds.cache.get(guildId)!;
+    const member = guild.members.cache.get(userId);
+    if (member) {
+        console.log(serverBoostRoleId)
+        return member.roles.cache.has(serverBoostRoleId) || member.roles.cache.has(adminRoleId);
+    }
+    return false;
 }

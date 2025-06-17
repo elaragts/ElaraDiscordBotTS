@@ -54,12 +54,13 @@ async function handleChatInputCommand(interaction: ChatInputCommandInteraction){
         return;
     }
     const subcommand = safeGetSubcommand(interaction);
-    logger.info(`[COMMAND] /${interaction.commandName}${subcommand ? ` ${subcommand}` : ''} | by: ${interaction.user.id} (${interaction.user.username})`);
+    const fullCommandName = `${interaction.commandName}${subcommand ? ` ${subcommand}` : ''}`
+    logger.info(`[COMMAND] /${fullCommandName} | by: ${interaction.user.id} (${interaction.user.username})`);
 
     try {
         await command.execute(interaction);
     } catch (err) {
-        logger.error({err: err}, `There was an error while executing ${interaction.commandName}`);
+        logger.error({err: err}, `There was an error while executing ${fullCommandName}`);
         if (interaction.replied || interaction.deferred) {
             await interaction.followUp({
                 content: "There was an error while executing this command!",
