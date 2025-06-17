@@ -102,7 +102,6 @@ export function isUserBoostingServer(userId: string): boolean {
     const guild = client.guilds.cache.get(guildId)!;
     const member = guild.members.cache.get(userId);
     if (member) {
-        console.log(serverBoostRoleId)
         return member.roles.cache.has(serverBoostRoleId) || member.roles.cache.has(adminRoleId);
     }
     return false;

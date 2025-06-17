@@ -1,6 +1,6 @@
 ﻿import fs from "node:fs";
 import {MusicinfoItem, SongInfo} from "../models/datatable";
-import {Language, songResultSeparator} from "../constants/datatable";
+import {Difficulty, Language, songResultSeparator} from "../constants/datatable";
 
 import {musicinfoPath, wordlistPath} from "../../config.json";
 
@@ -130,3 +130,17 @@ export function getSongTitle(uniqueId: number, lang: Language): string {
     const titles = songTitles.get(uniqueId);
     return titles !== undefined ? titles[lang] : "";
 }
+
+export function getSongStars(uniqueId: number, difficulty: Difficulty): number {
+    const result = musicinfo.get(uniqueId);
+    if (result === undefined) return 0;
+    switch (difficulty) {
+        case Difficulty.EASY: return result.starEasy;
+        case Difficulty.NORMAL: return result.starNormal;
+        case Difficulty.HARD: return result.starHard;
+        case Difficulty.ONI: return result.starMania;
+        case Difficulty.URA: return result.starUra;
+        default: return 0;
+    }
+}
+
