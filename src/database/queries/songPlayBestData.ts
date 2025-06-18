@@ -1,5 +1,5 @@
 ﻿import {db} from "../index";
-import {LeaderboardEntry} from "../../models/queries";
+import {LeaderboardEntry, MonthlyPlayCount} from "../../models/queries";
 import {sql} from "kysely";
 
 export async function getLeaderboard(uniqueId: number, difficulty: number, offset: number): Promise<LeaderboardEntry[]> {
@@ -95,4 +95,18 @@ export async function getBestScore(uniqueId: number, difficulty: number, baid: n
         full_combo_count: score.full_combo_count,
         all_perfect_count: score.all_perfect_count,
     };
+}
+
+export async function getMonthlyPlayCount(baid: number): Promise<MonthlyPlayCount[]> {
+    return await db
+        .selectFrom('song_play_data')
+        .select([
+            sql<string>`TO_CHAR(play_time, 'YYYY-MM')`.as('month'),
+            sql<number>`COUNT(*)`.as('play_count'),
+        ])
+        .where('baid', '=', baid)
+        .groupBy(sql`TO_CHAR(play_time, 'YYYY-MM')`)
+        .orderBy('month')
+        .execute();
+
 }

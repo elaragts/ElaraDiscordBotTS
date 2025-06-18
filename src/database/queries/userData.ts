@@ -34,3 +34,14 @@ export async function getCostume(baid: number): Promise<CostumeData | undefined>
         .where("baid", "=", baid)
         .executeTakeFirst();
 }
+
+export async function GetMyDonName(baid: number): Promise<string | undefined> {
+    const row = await db
+        .selectFrom('user_data')
+        .select(['my_don_name'])
+        .where('baid', '=', baid)
+        .executeTakeFirst();
+
+    return row?.my_don_name;
+
+}

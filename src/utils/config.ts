@@ -39,6 +39,7 @@ export function validateConfig(): Record<string, any> {
         botChannelId: "string",
         musicinfoPath: "string",
         wordlistPath: "string",
+        spritesPath: "string",
         serverBoostRoleId: "string",
         adminRoleId: "string",
 

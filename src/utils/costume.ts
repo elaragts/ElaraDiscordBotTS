@@ -2,6 +2,7 @@
 import path from "node:path";
 import {createCanvas, Image, loadImage} from "canvas";
 import {CostumeData} from "../models/queries";
+import {spritesPath} from "../../config.json";
 const width = 463;
 const height = 400;
 const numberToColourMap: Record<number, string> = {
@@ -97,75 +98,77 @@ export async function createCostumeAvatar(avatar: CostumeData): Promise<Buffer> 
     const puchiId = avatar.current_puchi;
     let bodyMask, faceMask, headBodyMask, headFaceMask, body, face, head, kigurumi, puchi;
     if (kigurumiId === 0) {
-        let bodyMaskPath = path.join(__dirname, `../sprites/masks/body-bodymask-${padToFourDigits(bodyId)}.png`);
-        let faceMaskPath = path.join(__dirname, `../sprites/masks/body-facemask-${padToFourDigits(bodyId)}.png`);
-        let bodyPath = path.join(__dirname, `../sprites/body/body-${padToFourDigits(bodyId)}.png`);
-        let facePath = path.join(__dirname, `../sprites/face/face-${padToFourDigits(faceId)}.png`);
-        let headBodyMaskPath = path.join(__dirname, `../sprites/masks/head-bodymask-${padToFourDigits(headId)}.png`);
-        let headFaceMaskPath = path.join(__dirname, `../sprites/masks/head-facemask-${padToFourDigits(headId)}.png`);
-        let headPath = path.join(__dirname, `../sprites/head/head-${padToFourDigits(headId)}.png`);
+        let bodyMaskPath = path.join(spritesPath, `masks/body-bodymask-${padToFourDigits(bodyId)}.png`);
+        let faceMaskPath = path.join(spritesPath, `masks/body-facemask-${padToFourDigits(bodyId)}.png`);
+        let bodyPath = path.join(spritesPath, `body/body-${padToFourDigits(bodyId)}.png`);
+        let facePath = path.join(spritesPath, `face/face-${padToFourDigits(faceId)}.png`);
+        let headBodyMaskPath = path.join(spritesPath, `masks/head-bodymask-${padToFourDigits(headId)}.png`);
+        let headFaceMaskPath = path.join(spritesPath, `masks/head-facemask-${padToFourDigits(headId)}.png`);
+        let headPath = path.join(spritesPath, `head/head-${padToFourDigits(headId)}.png`);
+
         if (fs.existsSync(bodyMaskPath)) {
             bodyMask = await loadImage(bodyMaskPath);
         } else {
-            bodyMask = await loadImage(path.join(__dirname, `../sprites/masks/body-bodymask-0000.png`));
+            bodyMask = await loadImage(path.join(spritesPath, `masks/body-bodymask-0000.png`));
         }
         if (fs.existsSync(faceMaskPath)) {
             faceMask = await loadImage(faceMaskPath);
         } else {
-            faceMask = await loadImage(path.join(__dirname, `../sprites/masks/body-facemask-0000.png`));
+            faceMask = await loadImage(path.join(spritesPath, `masks/body-facemask-0000.png`));
         }
         if (fs.existsSync(bodyPath)) {
             body = await loadImage(bodyPath);
         } else {
-            body = await loadImage(path.join(__dirname, `../sprites/body/body-0000.png`));
+            body = await loadImage(path.join(spritesPath, `body/body-0000.png`));
         }
         if (fs.existsSync(facePath)) {
             face = await loadImage(facePath);
         } else {
-            face = await loadImage(path.join(__dirname, `../sprites/face/face-0000.png`));
+            face = await loadImage(path.join(spritesPath, `face/face-0000.png`));
         }
         if (fs.existsSync(headBodyMaskPath)) {
             headBodyMask = await loadImage(headBodyMaskPath);
         } else {
-            headBodyMask = await loadImage(path.join(__dirname, `../sprites/head/head-0000.png`));
+            headBodyMask = await loadImage(path.join(spritesPath, `head/head-0000.png`));
         }
         if (fs.existsSync(headFaceMaskPath)) {
             headFaceMask = await loadImage(headFaceMaskPath);
         } else {
-            headFaceMask = await loadImage(path.join(__dirname, `../sprites/head/head-0000.png`));
+            headFaceMask = await loadImage(path.join(spritesPath, `head/head-0000.png`));
         }
         if (fs.existsSync(headPath)) {
             head = await loadImage(headPath);
         } else {
-            head = await loadImage(path.join(__dirname, `../sprites/head/head-0000.png`));
+            head = await loadImage(path.join(spritesPath, `head/head-0000.png`));
         }
     } else {
-        let kigurumiPath = path.join(__dirname, `../sprites/kigurumi/kigurumi-${padToFourDigits(kigurumiId)}.png`);
-        let kigurumiBodyMaskPath = path.join(__dirname, `../sprites/masks/kigurumi-bodymask-${padToFourDigits(kigurumiId)}.png`);
-        let kigurumiFaceMaskPath = path.join(__dirname, `../sprites/masks/kigurumi-facemask-${padToFourDigits(kigurumiId)}.png`);
+        let kigurumiPath = path.join(spritesPath, `kigurumi/kigurumi-${padToFourDigits(kigurumiId)}.png`);
+        let kigurumiBodyMaskPath = path.join(spritesPath, `masks/kigurumi-bodymask-${padToFourDigits(kigurumiId)}.png`);
+        let kigurumiFaceMaskPath = path.join(spritesPath, `masks/kigurumi-facemask-${padToFourDigits(kigurumiId)}.png`);
         if (fs.existsSync(kigurumiPath)) {
             kigurumi = await loadImage(kigurumiPath);
         } else {
-            kigurumi = await loadImage(path.join(__dirname, `../sprites/kigurumi/kigurumi-0000.png`));
+            kigurumi = await loadImage(path.join(spritesPath, `kigurumi/kigurumi-0000.png`));
         }
         if (fs.existsSync(kigurumiBodyMaskPath)) {
             bodyMask = await loadImage(kigurumiBodyMaskPath);
         } else {
-            bodyMask = await loadImage(path.join(__dirname, `../sprites/masks/body-bodymask-0000.png`));
+            bodyMask = await loadImage(path.join(spritesPath, `masks/body-bodymask-0000.png`));
         }
         if (fs.existsSync(kigurumiFaceMaskPath)) {
             faceMask = await loadImage(kigurumiFaceMaskPath);
         } else {
-            faceMask = await loadImage(path.join(__dirname, `../sprites/masks/body-facemask-0000.png`));
+            faceMask = await loadImage(path.join(spritesPath, `masks/body-facemask-0000.png`));
         }
     }
-    let puchiPath = path.join(__dirname, `../sprites/puchi/puchi-${padToFourDigits(puchiId)}.png`);
+    let puchiPath = path.join(spritesPath, `puchi/puchi-${padToFourDigits(puchiId)}.png`);
 
     if (fs.existsSync(puchiPath)) {
         puchi = await loadImage(puchiPath);
     } else {
-        puchi = await loadImage(path.join(__dirname, `../sprites/puchi/puchi-0000.png`));
+        puchi = await loadImage(path.join(spritesPath, `puchi/puchi-0000.png`));
     }
+
     // Create a canvas
     // Set the height of the final image
     const canvas = createCanvas(width, height);

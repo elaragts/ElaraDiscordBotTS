@@ -15,3 +15,8 @@ export type CostumeData = {
     color_body: number;
     color_face: number;
 };
+
+export type MonthlyPlayCount = {
+    month: string;
+    play_count: number;
+};
