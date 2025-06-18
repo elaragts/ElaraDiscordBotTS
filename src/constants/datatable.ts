@@ -6,11 +6,11 @@ export enum Language {
 }
 
 export enum Difficulty {
-    EASY,
-    NORMAL,
-    HARD,
-    ONI,
-    URA
+    EASY=1,
+    NORMAL=2,
+    HARD=3,
+    ONI=4,
+    URA=5
 }
 
 export enum Genre {

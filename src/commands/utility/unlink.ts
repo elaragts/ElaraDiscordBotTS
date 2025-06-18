@@ -11,7 +11,7 @@ module.exports = {
     async execute(interaction: ChatInputCommandInteraction) {
         const user = interaction.user;
         if (await getBaidFromDiscordId(user.id) === undefined) {
-            await replyWithErrorMessage(interaction, "link", "Your account is not linked to a TPS profile yet");
+            await replyWithErrorMessage(interaction, "link", "Your account is not linked to an EGTS profile yet");
             return;
         }
 

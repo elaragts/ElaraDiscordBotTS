@@ -1,4 +1,5 @@
 ﻿import {db} from "../index";
+import {CostumeData} from "../../models/queries";
 
 export async function getFavouriteSongsArray(baid: number): Promise<number[] | undefined> {
     const row = await db
@@ -14,6 +15,22 @@ export async function setFavouriteSongsArray(baid: number, songArray: number[]):
     await db
         .updateTable("user_data")
         .set({"favorite_songs_array": songArray})
+        .where("baid", "=", baid)
+        .executeTakeFirst();
+}
+
+export async function getCostume(baid: number): Promise<CostumeData | undefined> {
+    return await db
+        .selectFrom("user_data")
+        .select([
+            "current_body",
+            "current_face",
+            "current_head",
+            "current_kigurumi",
+            "current_puchi",
+            "color_body",
+            "color_face",
+        ])
         .where("baid", "=", baid)
         .executeTakeFirst();
 }
