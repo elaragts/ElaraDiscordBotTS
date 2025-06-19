@@ -174,9 +174,6 @@ export async function createCostumeAvatar(avatar: CostumeData): Promise<Buffer> 
     const canvas = createCanvas(width, height);
     const ctx = canvas.getContext('2d');
 
-    if (!body || !face || !headBodyMask || !headFaceMask || !head || !kigurumi) {
-        return canvas.toBuffer();
-    }
 
     // Create colored masks
     const coloredBodyMask = await applyMaskAndColor(bodyMask, numberToColourMap[avatar.color_body] || numberToColourMap[0]);
@@ -188,6 +185,9 @@ export async function createCostumeAvatar(avatar: CostumeData): Promise<Buffer> 
     // Draw images on top
     ctx.globalCompositeOperation = 'source-over';
     if (kigurumiId === 0) {
+        if (!body || !face || !head || !headFaceMask || !headBodyMask) {
+            return canvas.toBuffer();
+        }
         ctx.drawImage(body, 0, 0);
         ctx.drawImage(face, 0, 0);
         const colouredHeadBodyMask = await applyMaskAndColor(headBodyMask, numberToColourMap[avatar.color_body] || numberToColourMap[0]);
@@ -196,6 +196,9 @@ export async function createCostumeAvatar(avatar: CostumeData): Promise<Buffer> 
         ctx.drawImage(colouredHeadFaceMask, 0, 0);
         ctx.drawImage(head, 0, 0);
     } else {
+        if (!kigurumi) {
+            return canvas.toBuffer();
+        }
         ctx.drawImage(kigurumi, 0, 0);
     }
     ctx.drawImage(puchi, 0, 0);

@@ -31,7 +31,7 @@ export function registerHandlers(client: ExtendedClient) {
 
     for (const folder of commandFolders) {
         const commandsPath = path.join(foldersPath, folder);
-        const commandFiles = fs.readdirSync(commandsPath).filter(file => file.endsWith(".ts"));
+        const commandFiles = fs.readdirSync(commandsPath).filter(file => file.endsWith(".ts") || file.endsWith(".js"));
         for (const file of commandFiles) {
             const filePath = path.join(commandsPath, file);
             const command: Command = require(filePath);

@@ -1,5 +1,9 @@
 ﻿import {SlashCommandBuilder, AttachmentBuilder, ChatInputCommandInteraction} from "discord.js";
-import {replyWithErrorMessage, returnSongAutocomplete as autocomplete, validateSongInput} from "../../utils/discord";
+import {
+    editReplyWithErrorMessage,
+    returnSongAutocomplete as autocomplete,
+    validateSongInput
+} from "../../utils/discord";
 import {getBaidFromDiscordId} from "../../database/queries/userDiscord";
 import {getBestScore} from "../../database/queries/songPlayBestData";
 import {getSongStars, getSongTitle} from "../../utils/datatable";
@@ -38,6 +42,7 @@ module.exports = {
     //handle autocomplete interaction
     autocomplete,
     async execute(interaction: ChatInputCommandInteraction) {
+        await interaction.deferReply();
         const songInput = interaction.options.getString("song")!;
         const difficulty = parseInt(interaction.options.getString("difficulty")!);
         let baid;
@@ -46,7 +51,7 @@ module.exports = {
         if (userOption) {
             baid = await getBaidFromDiscordId(userOption.id);
             if (baid === undefined) {
-                await replyWithErrorMessage(interaction, "My Stats", "This user has not linked their discord account to their card yet!");
+                await editReplyWithErrorMessage(interaction, "My Stats", "This user has not linked their discord account to their card yet!");
                 return;
             }
             user = userOption;
@@ -54,7 +59,7 @@ module.exports = {
             user = interaction.user;
             baid = await getBaidFromDiscordId(interaction.user.id);
             if (baid === undefined) {
-                await replyWithErrorMessage(interaction, "My Stats", "You have not linked your discord account to your card yet!");
+                await editReplyWithErrorMessage(interaction, "My Stats", "You have not linked your discord account to your card yet!");
                 return;
             }
         }
@@ -142,6 +147,6 @@ module.exports = {
                 }
             ]
         };
-        await interaction.reply({embeds: [returnEmbed], files: [attachment]});
+        await interaction.editReply({embeds: [returnEmbed], files: [attachment]});
     },
 };
