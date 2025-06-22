@@ -37,11 +37,20 @@ function initializeMusicInfo() {
         musicinfo.set(item["uniqueId"], {
             id: item["id"],
             uniqueId: item["uniqueId"],
-            starEasy: item["starEasy"],
-            starNormal: item["starNormal"],
-            starHard: item["starHard"],
-            starMania: item["starMania"],
-            starUra: item["starUra"],
+            stars: {
+                [Difficulty.EASY]: item["starEasy"],
+                [Difficulty.NORMAL]: item["starNormal"],
+                [Difficulty.HARD]: item["starHard"],
+                [Difficulty.ONI]: item["starMania"],
+                [Difficulty.URA]: item["starUra"]
+            },
+            maxCombos: {
+                [Difficulty.EASY]: item["easyOnpuNum"],
+                [Difficulty.NORMAL]: item["normalOnpuNum"],
+                [Difficulty.HARD]: item["hardOnpuNum"],
+                [Difficulty.ONI]: item["maniaOnpuNum"],
+                [Difficulty.URA]: item["uraOnpuNum"]
+            },
             genreNo: item["genreNo"],
             papamama: item["papamama"]
         });
@@ -134,13 +143,12 @@ export function getSongTitle(uniqueId: number, lang: Language): string {
 export function getSongStars(uniqueId: number, difficulty: Difficulty): number {
     const result = musicinfo.get(uniqueId);
     if (result === undefined) return 0;
-    switch (difficulty) {
-        case Difficulty.EASY: return result.starEasy;
-        case Difficulty.NORMAL: return result.starNormal;
-        case Difficulty.HARD: return result.starHard;
-        case Difficulty.ONI: return result.starMania;
-        case Difficulty.URA: return result.starUra;
-        default: return 0;
-    }
+    return result.stars[difficulty];
+}
+
+export function getNoteCountOfSong(uniqueId: number, difficulty: Difficulty): number {
+    const result = musicinfo.get(uniqueId);
+    if (result === undefined) return 0;
+    return result.maxCombos[difficulty];
 }
 

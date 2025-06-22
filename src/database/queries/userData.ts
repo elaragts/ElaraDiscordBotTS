@@ -131,7 +131,7 @@ export async function getUserProfile(baid: number): Promise<UserProfile | undefi
 
 }
 
-export async function GetMyDonName(baid: number): Promise<string | undefined> {
+export async function getMyDonName(baid: number): Promise<string | undefined> {
     const row = await db
         .selectFrom("user_data")
         .select(["my_don_name"])

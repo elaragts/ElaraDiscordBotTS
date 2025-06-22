@@ -55,6 +55,7 @@ export interface Battle {
   player_two_baid: Int8;
   song_number: Int8;
   winner_baid: Int8;
+  battle_at: Timestamp;
 }
 
 export interface Card {

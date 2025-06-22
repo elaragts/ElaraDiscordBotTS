@@ -1,0 +1,62 @@
+﻿import {REST, Routes} from "discord.js";
+import {guildId, deployment} from "../../config.json";
+import {data as adminCommand} from "../commands/utility/admin"
+import fs from "node:fs";
+import path from "node:path";
+import dotenv from "dotenv";
+
+dotenv.config({path: path.join(__dirname, "..", "..", ".env")});
+
+const commands = [];
+// Grab all the command folders from the commands directory you created earlier
+const foldersPath = path.join(__dirname, '..', 'commands');
+const commandFolders = fs.readdirSync(foldersPath);
+
+for (const folder of commandFolders) {
+    // Grab all the command files from the commands directory you created earlier
+    const commandsPath = path.join(foldersPath, folder);
+    const commandFiles = fs.readdirSync(commandsPath).filter(file => file.endsWith('.js') || file.endsWith('.ts'));
+    // Grab the SlashCommandBuilder#toJSON() output of each command's data for deployment
+    for (const file of commandFiles) {
+        const filePath = path.join(commandsPath, file);
+
+        // Skip if it's a directory
+        if (fs.statSync(filePath).isDirectory()) {
+            continue;
+        }
+
+        const command = require(filePath);
+        if ('data' in command && 'execute' in command) {
+            commands.push(command.data.toJSON());
+        } else {
+            console.log(`[WARNING] The command at ${filePath} is missing a required "data" or "execute" property.`);
+        }
+    }
+
+}
+if (process.env.BOT_TOKEN === undefined || process.env.CLIENT_ID === undefined) {
+    throw new Error("BOT_TOKEN & CLIENT_ID environment variables required");
+}
+
+// Construct and prepare an instance of the REST module
+const rest = new REST().setToken(process.env.BOT_TOKEN);
+
+// and deploy your commands!
+(async () => {
+    try {
+        console.log(`Started refreshing ${commands.length} application (/) commands.`);
+
+        // The put method is used to fully refresh all commands in the guild with the current set
+        const data: any = await rest.put(Routes.applicationCommands(process.env.CLIENT_ID!), {body: commands})
+        const data2: any = await rest.put(
+            Routes.applicationGuildCommands(process.env.CLIENT_ID!, guildId),
+            {body: deployment === "production" ? [adminCommand] : commands},
+        );
+
+        console.log(`Successfully reloaded ${data.length} application (/) commands.`);
+
+    } catch (error) {
+        // And of course, make sure you catch and log any errors!
+        console.error(error);
+    }
+})();

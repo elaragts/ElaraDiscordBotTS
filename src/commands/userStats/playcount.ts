@@ -1,7 +1,7 @@
 ﻿import {SlashCommandBuilder, ChatInputCommandInteraction} from "discord.js";
 import {getBaidFromDiscordId} from "../../database/queries/userDiscord";
 import {editReplyWithErrorMessage, replyWithErrorMessage} from "../../utils/discord";
-import {GetMyDonName} from "../../database/queries/userData";
+import {getMyDonName} from "../../database/queries/userData";
 import {getMonthlyPlayCount} from "../../database/queries/songPlayBestData";
 import { format, parse, addMonths, isBefore } from 'date-fns';
 import {MonthlyPlayCount} from "../../models/queries";
@@ -51,7 +51,7 @@ module.exports = {
             }
         }
 
-        const userDonName = (await GetMyDonName(baid))!;
+        const userDonName = (await getMyDonName(baid))!;
         const chartConfig = {
             chart: {
                 type: 'line',

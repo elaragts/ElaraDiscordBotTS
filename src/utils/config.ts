@@ -34,7 +34,7 @@ export function validateConfig(): Record<string, any> {
         throw new Error("Config file must contain a valid JSON object.");
     }
 
-    const expectedSchema: Record<string, "string"> = {
+    const expectedSchema: Record<string, "string" | "object"> = {
         guildId: "string",
         botChannelId: "string",
         musicinfoPath: "string",
@@ -42,7 +42,8 @@ export function validateConfig(): Record<string, any> {
         spritesPath: "string",
         serverBoostRoleId: "string",
         adminRoleId: "string",
-
+        whitelistedAdmins: "object",
+        deployment: "string",
         // Emoji ID fields
         clearEmojiId: "string",
         FCEmojiId: "string",

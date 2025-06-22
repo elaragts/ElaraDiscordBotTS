@@ -1,6 +1,7 @@
 ﻿import {db} from "../index";
-import {LeaderboardEntry, MonthlyPlayCount} from "../../models/queries";
+import {LeaderboardEntry, MonthlyPlayCount, SongPlay} from "../../models/queries";
 import {sql} from "kysely";
+import {Difficulty} from "../../constants/datatable";
 
 export async function getLeaderboard(uniqueId: number, difficulty: number, offset: number): Promise<LeaderboardEntry[]> {
     return await db
@@ -99,14 +100,46 @@ export async function getBestScore(uniqueId: number, difficulty: number, baid: n
 
 export async function getMonthlyPlayCount(baid: number): Promise<MonthlyPlayCount[]> {
     return await db
-        .selectFrom('song_play_data')
+        .selectFrom("song_play_data")
         .select([
-            sql<string>`TO_CHAR(play_time, 'YYYY-MM')`.as('month'),
-            sql<number>`COUNT(*)`.as('play_count'),
+            sql<string>`TO_CHAR
+            (play_time, 'YYYY-MM')`.as("month"),
+            sql<number>`COUNT(*)`.as("play_count"),
         ])
-        .where('baid', '=', baid)
-        .groupBy(sql`TO_CHAR(play_time, 'YYYY-MM')`)
-        .orderBy('month')
+        .where("baid", "=", baid)
+        .groupBy(sql`TO_CHAR
+        (play_time, 'YYYY-MM')`)
+        .orderBy("month")
         .execute();
+}
+
+export async function getMaxSongPlayDataId(): Promise<number> {
+    const row = await db
+        .selectFrom("song_play_data")
+        .select(({fn}) => fn.max("id").as("max_id"))
+        .executeTakeFirst();
+    return row?.max_id || 0;
+}
+
+export async function getLatestUserPlay(baid: number, uniqueId: number, difficulty: Difficulty): Promise<SongPlay | undefined> {
+    return await db
+        .selectFrom("song_play_data")
+        .select([
+            "id",
+            "score",
+            "score_rank",
+            "crown",
+            "good_count",
+            "ok_count",
+            "miss_count",
+            "drumroll_count",
+            "combo_count"
+        ])
+        .where("baid", "=", baid)
+        .where("song_id", "=", uniqueId)
+        .where("difficulty", "=", difficulty)
+        .orderBy("id", "desc")
+        .executeTakeFirst();
+
 
 }

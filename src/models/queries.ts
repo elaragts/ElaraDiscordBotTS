@@ -47,3 +47,15 @@ export type UserProfile = {
     bestcrown_2: number;
     bestcrown_3: number;
 }
+
+export type SongPlay = {
+    id: number;
+    combo_count: number;
+    crown: number;
+    drumroll_count: number;
+    good_count: number;
+    miss_count: number;
+    ok_count: number;
+    score: number;
+    score_rank: number;
+}

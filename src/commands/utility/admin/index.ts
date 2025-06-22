@@ -1,0 +1,118 @@
+﻿import {SlashCommandBuilder, InteractionContextType, ChatInputCommandInteraction} from "discord.js";
+
+import {replyWithErrorMessage} from "../../../utils/discord";
+import {whitelistedAdmins} from "../../../../config.json";
+
+export const data = new SlashCommandBuilder()
+    .setName("admin")
+    .setDescription("Admin commands")
+    .setDefaultMemberPermissions(0) //admin only
+    .setContexts(InteractionContextType.Guild)
+    .addSubcommandGroup(
+        subcommandGroup =>
+            subcommandGroup
+                .setName("chassisid")
+                .setDescription("ChassisID related commands")
+                .addSubcommand(
+                    subcommand =>
+                        subcommand
+                            .setName("whois")
+                            .setDescription("Get user from ChassisID")
+                            .addStringOption(option =>
+                                option
+                                    .setName("chassisid")
+                                    .setDescription("User's ChassisID")
+                                    .setRequired(true)
+                            )
+                )
+                .addSubcommand(
+                    subcommand =>
+                        subcommand
+                            .setName("view")
+                            .setDescription("View user's ChassisID")
+                            .addUserOption(option =>
+                                option
+                                    .setName("user")
+                                    .setDescription("Target user")
+                                    .setRequired(true)
+                            )
+                )
+                .addSubcommand(
+                    subcommand =>
+                        subcommand
+                            .setName("delete")
+                            .setDescription("Deletes ChassisID/User's ChassisID")
+                            .addUserOption(option =>
+                                option
+                                    .setName("user")
+                                    .setDescription("Target user")
+                                    .setRequired(false)
+                            )
+                            .addStringOption(option =>
+                                option
+                                    .setName("chassisid")
+                                    .setDescription("Target ChassisID")
+                                    .setRequired(false)
+                            )
+                )
+                .addSubcommand(
+                    subcommand =>
+                        subcommand
+                            .setName("enable")
+                            .setDescription("Enables ChassisID/User's ChassisID")
+                            .addUserOption(option =>
+                                option
+                                    .setName("user")
+                                    .setDescription("Target user")
+                                    .setRequired(false)
+                            )
+                            .addStringOption(option =>
+                                option
+                                    .setName("chassisid")
+                                    .setDescription("Target ChassisID")
+                                    .setRequired(false)
+                            )
+                )
+                .addSubcommand(
+                    subcommand =>
+                        subcommand
+                            .setName("disable")
+                            .setDescription("Disables ChassisID/User's ChassisID")
+                            .addUserOption(option =>
+                                option
+                                    .setName("user")
+                                    .setDescription("Target user")
+                                    .setRequired(false)
+                            )
+                            .addStringOption(option =>
+                                option
+                                    .setName("chassisid")
+                                    .setDescription("Target ChassisID")
+                                    .setRequired(false)
+                            )
+                )
+    );
+
+export async function execute(interaction: ChatInputCommandInteraction) {
+    if (!whitelistedAdmins.includes(interaction.user.id)) {
+        await replyWithErrorMessage(interaction, "Admin", "You are not a whitelisted admin!");
+        return;
+    }
+    // switch (interaction.options.getSubcommandGroup()) {
+    //     case 'chassisid': {
+    //         switch (interaction.options.getSubcommand()) {
+    //             case 'whois':
+    //                 return await chassisWhois(interaction);
+    //             case 'view':
+    //                 return await chassisView(interaction);
+    //             case 'delete':
+    //                 return await chassisDelete(interaction);
+    //             case 'enable':
+    //                 return await chassisEnable(interaction);
+    //             case 'disable':
+    //                 return await chassisDisable(interaction);
+    //         }
+    //     }
+    //         break;
+    // }
+}
