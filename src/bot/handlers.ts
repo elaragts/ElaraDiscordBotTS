@@ -41,6 +41,7 @@ export function registerHandlers(client: ExtendedClient) {
                 logger.warn(`The command at ${filePath} is missing a required "data" or "execute" property.`);
             }
         }
+        client.commands.set("admin", require("../commands/utility/admin"))
     }
 }
 

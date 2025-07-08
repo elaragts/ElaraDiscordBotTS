@@ -2,6 +2,11 @@
 
 import {replyWithErrorMessage} from "../../../utils/discord";
 import {whitelistedAdmins} from "../../../../config.json";
+import {execute as chassisWhois} from "./chassis/whois";
+import {execute as chassisView} from "./chassis/view";
+import {execute as chassisEnable} from "./chassis/enable";
+import {execute as chassisDisable} from "./chassis/disable";
+import {execute as chassisDelete} from "./chassis/delete";
 
 export const data = new SlashCommandBuilder()
     .setName("admin")
@@ -18,7 +23,7 @@ export const data = new SlashCommandBuilder()
                         subcommand
                             .setName("whois")
                             .setDescription("Get user from ChassisID")
-                            .addStringOption(option =>
+                            .addNumberOption(option =>
                                 option
                                     .setName("chassisid")
                                     .setDescription("User's ChassisID")
@@ -48,7 +53,7 @@ export const data = new SlashCommandBuilder()
                                     .setDescription("Target user")
                                     .setRequired(false)
                             )
-                            .addStringOption(option =>
+                            .addNumberOption(option =>
                                 option
                                     .setName("chassisid")
                                     .setDescription("Target ChassisID")
@@ -66,7 +71,7 @@ export const data = new SlashCommandBuilder()
                                     .setDescription("Target user")
                                     .setRequired(false)
                             )
-                            .addStringOption(option =>
+                            .addNumberOption(option =>
                                 option
                                     .setName("chassisid")
                                     .setDescription("Target ChassisID")
@@ -98,21 +103,21 @@ export async function execute(interaction: ChatInputCommandInteraction) {
         await replyWithErrorMessage(interaction, "Admin", "You are not a whitelisted admin!");
         return;
     }
-    // switch (interaction.options.getSubcommandGroup()) {
-    //     case 'chassisid': {
-    //         switch (interaction.options.getSubcommand()) {
-    //             case 'whois':
-    //                 return await chassisWhois(interaction);
-    //             case 'view':
-    //                 return await chassisView(interaction);
-    //             case 'delete':
-    //                 return await chassisDelete(interaction);
-    //             case 'enable':
-    //                 return await chassisEnable(interaction);
-    //             case 'disable':
-    //                 return await chassisDisable(interaction);
-    //         }
-    //     }
-    //         break;
-    // }
+    switch (interaction.options.getSubcommandGroup()) {
+        case "chassisid": {
+            switch (interaction.options.getSubcommand()) {
+                case "whois":
+                    return await chassisWhois(interaction);
+                case 'view':
+                    return await chassisView(interaction);
+                case 'delete':
+                    return await chassisDelete(interaction);
+                case 'enable':
+                    return await chassisEnable(interaction);
+                case 'disable':
+                    return await chassisDisable(interaction);
+            }
+        }
+            break;
+    }
 }
