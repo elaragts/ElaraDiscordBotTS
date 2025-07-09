@@ -1,6 +1,6 @@
 ﻿import {db} from "../index";
 import {PgError} from "../../models/errors";
-import {UserChassisItem} from "../../models/queries";
+import {UserChassisChassisListItem, UserChassisUserListItem} from "../../models/queries";
 
 export async function getChassisIdFromDiscordId(discordId: string): Promise<number | undefined> {
     const row = await db
@@ -69,7 +69,7 @@ export async function generateAndRegisterChassis(discordId: string): Promise<str
     }
 }
 
-export async function getUserChassisList(chassisId: number, offset: number): Promise<UserChassisItem[]> {
+export async function getUserChassisList(chassisId: number, offset: number): Promise<UserChassisUserListItem[]> {
     return await db
         .selectFrom("user_chassis")
         .innerJoin("user_data", "user_chassis.baid", "user_data.baid")
@@ -81,6 +81,21 @@ export async function getUserChassisList(chassisId: number, offset: number): Pro
             "user_chassis.last_used as last_used"
         ])
         .where("user_chassis.chassis_id", "=", chassisId)
+        .limit(10)
+        .offset(offset)
+        .execute();
+}
+
+export async function getUserUsedChassisList(baid: number, offset: number): Promise<UserChassisChassisListItem[]> {
+    return await db
+        .selectFrom("user_chassis")
+        .innerJoin("chassis", "chassis.chassis_id", "user_chassis.chassis_id")
+        .select([
+            "user_chassis.chassis_id as chassis_id",
+            "chassis.discord_id as discord_id",
+            "user_chassis.last_used as last_used"
+        ])
+        .where("user_chassis.baid", "=", baid)
         .limit(10)
         .offset(offset)
         .execute();

@@ -141,3 +141,13 @@ export async function getMyDonName(baid: number): Promise<string | undefined> {
     return row?.my_don_name;
 
 }
+
+export async function doesBaidExist(baid: number): Promise<boolean> {
+    const result = await db
+        .selectFrom("user_data")
+        .select("baid")
+        .where("baid", "=", baid)
+        .executeTakeFirst();
+
+    return result !== undefined;
+}

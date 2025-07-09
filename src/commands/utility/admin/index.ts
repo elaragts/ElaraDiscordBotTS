@@ -114,6 +114,12 @@ export const data = new SlashCommandBuilder()
                                     .setDescription("Target ChassisID")
                                     .setRequired(false)
                             )
+                            .addNumberOption(option =>
+                                option
+                                    .setName("baid")
+                                    .setDescription("Target Baid")
+                                    .setRequired(false)
+                            )
                             .addIntegerOption(option =>
                                 option.setName('page')
                                     .setDescription('Result Page')
