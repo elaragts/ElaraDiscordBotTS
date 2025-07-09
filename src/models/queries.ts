@@ -59,3 +59,10 @@ export type SongPlay = {
     score: number;
     score_rank: number;
 }
+
+export type UserChassisItem = {
+    baid: number;
+    my_don_name: string;
+    discord_id: string | null;
+    last_used: Date;
+}

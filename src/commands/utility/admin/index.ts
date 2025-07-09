@@ -7,6 +7,7 @@ import {execute as chassisView} from "./chassis/view";
 import {execute as chassisEnable} from "./chassis/enable";
 import {execute as chassisDisable} from "./chassis/disable";
 import {execute as chassisDelete} from "./chassis/delete";
+import {execute as chassisList} from "./chassis/list";
 
 export const data = new SlashCommandBuilder()
     .setName("admin")
@@ -89,11 +90,35 @@ export const data = new SlashCommandBuilder()
                                     .setDescription("Target user")
                                     .setRequired(false)
                             )
-                            .addStringOption(option =>
+                            .addNumberOption(option =>
                                 option
                                     .setName("chassisid")
                                     .setDescription("Target ChassisID")
                                     .setRequired(false)
+                            )
+                )
+                .addSubcommand(
+                    subcommand =>
+                        subcommand
+                            .setName("list")
+                            .setDescription("Lists baids that used ChassisID/User's ChassisID")
+                            .addUserOption(option =>
+                                option
+                                    .setName("user")
+                                    .setDescription("Target user")
+                                    .setRequired(false)
+                            )
+                            .addNumberOption(option =>
+                                option
+                                    .setName("chassisid")
+                                    .setDescription("Target ChassisID")
+                                    .setRequired(false)
+                            )
+                            .addIntegerOption(option =>
+                                option.setName('page')
+                                    .setDescription('Result Page')
+                                    .setRequired(false)
+                                    .setMinValue(1)
                             )
                 )
     );
@@ -116,6 +141,8 @@ export async function execute(interaction: ChatInputCommandInteraction) {
                     return await chassisEnable(interaction);
                 case 'disable':
                     return await chassisDisable(interaction);
+                case 'list':
+                    return await chassisList(interaction);
             }
         }
             break;

@@ -1,5 +1,6 @@
 ﻿import {db} from "../index";
-import {PgError} from "../../models/errors"
+import {PgError} from "../../models/errors";
+import {UserChassisItem} from "../../models/queries";
 
 export async function getChassisIdFromDiscordId(discordId: string): Promise<number | undefined> {
     const row = await db
@@ -32,7 +33,7 @@ export async function getChassisIdStatus(chassisId: number): Promise<boolean | u
 export async function setChassisStatus(chassisId: number, status: boolean): Promise<void> {
     await db
         .updateTable("chassis")
-        .set({ active: status })
+        .set({active: status})
         .where("chassis_id", "=", chassisId)
         .execute();
 }
@@ -51,14 +52,14 @@ export async function generateAndRegisterChassis(discordId: string): Promise<str
     const chassisId = "284111" + randomString;
     try {
         await db
-            .insertInto('chassis')
+            .insertInto("chassis")
             .values({
                 "chassis_id": parseInt(chassisId),
                 "discord_id": discordId,
                 "active": true
             })
             .executeTakeFirst();
-        return chassisId
+        return chassisId;
     } catch (err) {
         if ((err as PgError).code === "23505") {
             return generateAndRegisterChassis(discordId);
@@ -66,4 +67,21 @@ export async function generateAndRegisterChassis(discordId: string): Promise<str
             throw err;
         }
     }
+}
+
+export async function getUserChassisList(chassisId: number, offset: number): Promise<UserChassisItem[]> {
+    return await db
+        .selectFrom("user_chassis")
+        .innerJoin("user_data", "user_chassis.baid", "user_data.baid")
+        .leftJoin("user_discord", "user_chassis.baid", "user_discord.baid")
+        .select([
+            "user_chassis.baid as baid",
+            "user_data.my_don_name as my_don_name",
+            "user_discord.discord_id as discord_id",
+            "user_chassis.last_used as last_used"
+        ])
+        .where("user_chassis.chassis_id", "=", chassisId)
+        .limit(10)
+        .offset(offset)
+        .execute();
 }
