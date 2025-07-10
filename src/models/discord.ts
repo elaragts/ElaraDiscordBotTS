@@ -17,3 +17,13 @@ export class ExtendedClient extends Client {
     public ongoingBattles: Set<string> = new Set();
     public playerFavouriteSongs: Map<number, number[]> = new Map();
 }
+
+export type SongValidationResult = {
+    uniqueId: number;
+    lang: number;
+}
+
+export type SearchSongResult = {
+    title: string;
+    songOutput: string;
+}

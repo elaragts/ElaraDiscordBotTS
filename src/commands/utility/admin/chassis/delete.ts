@@ -6,7 +6,9 @@
 } from "../../../../database/queries/chassis";
 import {replyWithErrorMessage} from "../../../../utils/discord";
 import {ActionRowBuilder, ButtonBuilder, ButtonStyle, ChatInputCommandInteraction, MessageFlags} from "discord.js";
+import {EMBED_COLOUR} from "../../../../constants/discord";
 
+const COMMAND_NAME = "Delete ChassisID"
 export async function execute(interaction: ChatInputCommandInteraction)  {
     let discordId, chassisId;
     const userOption = interaction.options.getUser('user');
@@ -16,16 +18,16 @@ export async function execute(interaction: ChatInputCommandInteraction)  {
         discordId = userOption.id;
         chassisId = await getChassisIdFromDiscordId(discordId);
         if (chassisId === undefined) {
-            return await replyWithErrorMessage(interaction, 'Delete ChassisID', `User <@${discordId}> does not have a ChassisID`);
+            return await replyWithErrorMessage(interaction, COMMAND_NAME, `User <@${discordId}> does not have a ChassisID`);
         }
     } else if (chassisIdOption) {
         chassisId = chassisIdOption;
         discordId = await getDiscordIdFromChassisId(chassisId);
         if (discordId === undefined) {
-            return await replyWithErrorMessage(interaction, 'Delete ChassisID', `ChassisID \`${chassisId}\` not found`);
+            return await replyWithErrorMessage(interaction, COMMAND_NAME, `ChassisID \`${chassisId}\` not found`);
         }
     } else {
-        return await replyWithErrorMessage(interaction, 'Delete ChassisID', 'ChassisID or user option required');
+        return await replyWithErrorMessage(interaction, COMMAND_NAME, 'ChassisID or user option required');
     }
 
     await setChassisStatus(chassisId, true);
@@ -33,7 +35,7 @@ export async function execute(interaction: ChatInputCommandInteraction)  {
         description: `Are you sure you want to delete <@${discordId}>'s ChassisID \`${chassisId}\`?\nThis will allow the user to register a new chassisID`,
         color: 15410003,
         author: {
-            name: "Delete ChassisID"
+            name: COMMAND_NAME
         },
     };
     const confirmButton = new ButtonBuilder()
@@ -63,9 +65,9 @@ export async function execute(interaction: ChatInputCommandInteraction)  {
                 await interaction.editReply({
                     embeds: [{
                         description: `Deleted <@${discordId}>'s ChassisID \`${chassisId}\``,
-                        color: 15410003,
+                        color: EMBED_COLOUR,
                         author: {
-                            name: "Delete ChassisID"
+                            name: COMMAND_NAME
                         },
                     }], components: []
                 });
@@ -73,9 +75,9 @@ export async function execute(interaction: ChatInputCommandInteraction)  {
                 await interaction.editReply({
                     embeds: [{
                         description: `Failed to delete chassis ID`,
-                        color: 15410003,
+                        color: EMBED_COLOUR,
                         author: {
-                            name: "Delete ChassisID"
+                            name: COMMAND_NAME
                         },
                     }], components: []
                 });
@@ -85,9 +87,9 @@ export async function execute(interaction: ChatInputCommandInteraction)  {
             await interaction.editReply({
                 embeds: [{
                     description: `Cancelled Interaction`,
-                    color: 15410003,
+                    color: EMBED_COLOUR,
                     author: {
-                        name: "Delete ChassisID"
+                        name: COMMAND_NAME
                     },
                 }], components: []
             });
@@ -100,9 +102,9 @@ export async function execute(interaction: ChatInputCommandInteraction)  {
             await interaction.editReply({
                 embeds: [{
                     description: `Interaction timed out`,
-                    color: 15410003,
+                    color: EMBED_COLOUR,
                     author: {
-                        name: "Delete ChassisID"
+                        name: COMMAND_NAME
                     },
                 }], components: []
             });

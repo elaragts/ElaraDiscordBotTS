@@ -6,6 +6,10 @@
 import {replyWithErrorMessage} from "../../../../utils/discord";
 import {ChatInputCommandInteraction, APIEmbed} from "discord.js";
 import {doesBaidExist, getMyDonName} from "../../../../database/queries/userData";
+import {EMBED_COLOUR} from "../../../../constants/discord";
+
+const COMMAND_NAME = "List ChassisID"
+
 
 export async function execute(interaction: ChatInputCommandInteraction) {
     let discordId, chassisId;
@@ -16,7 +20,7 @@ export async function execute(interaction: ChatInputCommandInteraction) {
     let returnEmbed: APIEmbed;
     if (baid) {
         if (!await doesBaidExist(baid)) {
-            return replyWithErrorMessage(interaction, "ChassisID List", `baid ${baid} does not exist`);
+            return replyWithErrorMessage(interaction, COMMAND_NAME, `baid ${baid} does not exist`);
         }
         const myDonName = (await getMyDonName(baid))!;
         const result = await getUserUsedChassisList(baid, (page - 1) * 10);
@@ -27,9 +31,9 @@ export async function execute(interaction: ChatInputCommandInteraction) {
         returnEmbed = {
             title: `baid: ${baid} (${myDonName})`,
             description: desc,
-            color: 15410003,
+            color: EMBED_COLOUR,
             author: {
-                name: "ChassisID List"
+                name: COMMAND_NAME
             },
         };
     } else {
@@ -37,16 +41,16 @@ export async function execute(interaction: ChatInputCommandInteraction) {
             discordId = userOption.id;
             chassisId = await getChassisIdFromDiscordId(discordId);
             if (chassisId === undefined) {
-                return await replyWithErrorMessage(interaction, "ChassisID List", `User <@${discordId}> does not have a ChassisID`);
+                return await replyWithErrorMessage(interaction, COMMAND_NAME, `User <@${discordId}> does not have a ChassisID`);
             }
         } else if (chassisIdOption) {
             chassisId = chassisIdOption;
             discordId = await getDiscordIdFromChassisId(chassisId);
             if (discordId === undefined) {
-                return await replyWithErrorMessage(interaction, "ChassisID List", `ChassisID \`${chassisId}\` not found`);
+                return await replyWithErrorMessage(interaction, COMMAND_NAME, `ChassisID \`${chassisId}\` not found`);
             }
         } else {
-            return await replyWithErrorMessage(interaction, "ChassisID List", "ChassisID or user option required");
+            return await replyWithErrorMessage(interaction, COMMAND_NAME, "ChassisID or user option required");
         }
         const result = await getUserChassisList(chassisId, (page - 1) * 10);
         let desc = result.length > 0 ? "" : "No results found";
@@ -55,9 +59,9 @@ export async function execute(interaction: ChatInputCommandInteraction) {
         }
         returnEmbed = {
             description: desc,
-            color: 15410003,
+            color: EMBED_COLOUR,
             author: {
-                name: "ChassisID List"
+                name: COMMAND_NAME
             },
         };
     }

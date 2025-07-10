@@ -5,9 +5,13 @@ import {getMyDonName} from "../../database/queries/userData";
 import {getMonthlyPlayCount} from "../../database/queries/songPlayBestData";
 import { format, parse, addMonths, isBefore } from 'date-fns';
 import {MonthlyPlayCount} from "../../models/queries";
+import {EMBED_COLOUR} from "../../constants/discord";
+
+const COMMAND_NAME = "Play Count"
+
 module.exports = {
     data: new SlashCommandBuilder()
-        .setName('playcount')
+        .setName("playcount")
         .setDescription('Play Count')
         .addUserOption(option =>
             option.setName('user')
@@ -21,13 +25,13 @@ module.exports = {
         if (userOption) {
             baid = await getBaidFromDiscordId(userOption.id);
             if (baid === undefined) {
-                await replyWithErrorMessage(interaction, 'Playcount', 'This user has not linked their discord account to their card yet!');
+                await replyWithErrorMessage(interaction, COMMAND_NAME, 'This user has not linked their discord account to their card yet!');
                 return;
             }
         } else {
             baid = await getBaidFromDiscordId(interaction.user.id);
             if (baid === undefined) {
-                await replyWithErrorMessage(interaction, 'Playcount', 'You have not linked your discord account to your card yet!');
+                await replyWithErrorMessage(interaction, COMMAND_NAME, 'You have not linked your discord account to your card yet!');
                 return;
             }
         }
@@ -125,17 +129,17 @@ module.exports = {
         });
 
         if (!response.ok) {
-            await editReplyWithErrorMessage(interaction, 'Playcount', 'Graphing API responded with error');
+            await editReplyWithErrorMessage(interaction, COMMAND_NAME, 'Graphing API responded with error');
         }
         const imageURL = (await response.json()).url
         //construct embed
         const returnEmbed = {
-            color: 15410003,
+            color: EMBED_COLOUR,
             image: {
                 url: imageURL,
             },
             author: {
-                name: `Playcount`
+                name: COMMAND_NAME
             },
         };
         await interaction.editReply({embeds: [returnEmbed]});

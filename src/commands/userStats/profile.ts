@@ -6,7 +6,9 @@ import {crownIdToEmoji, daniClearStateToEmoji, difficultyToEmoji, rankIdToEmoji}
 import {danIdToName} from "../../utils/common";
 import {createCostumeAvatar} from "../../utils/costume";
 import {CostumeData} from "../../models/queries";
+import {EMBED_COLOUR} from "../../constants/discord";
 
+const COMMAND_NAME = "Profile"
 module.exports = {
     data: new SlashCommandBuilder()
         .setName("profile")
@@ -23,20 +25,20 @@ module.exports = {
         if (userOption) {
             baid = await getBaidFromDiscordId(userOption.id);
             if (baid === undefined) {
-                await replyWithErrorMessage(interaction, "Profile", "This user has not linked their discord account to their card yet!");
+                await replyWithErrorMessage(interaction, COMMAND_NAME, "This user has not linked their discord account to their card yet!");
                 return;
             }
         } else {
             baid = await getBaidFromDiscordId(interaction.user.id);
             if (baid === undefined) {
-                await replyWithErrorMessage(interaction, "Profile", "You have not linked your discord account to your card yet!");
+                await replyWithErrorMessage(interaction, COMMAND_NAME, "You have not linked your discord account to your card yet!");
                 return;
             }
         }
         await interaction.deferReply();
         const profile = await getUserProfile(baid);
         if (profile === undefined) {
-            await replyWithErrorMessage(interaction, "Profile", "Error retrieving profile");
+            await replyWithErrorMessage(interaction, COMMAND_NAME, "Error retrieving profile");
             return;
         }
         const clearState = daniClearStateToEmoji(profile.clear_state);
@@ -96,12 +98,12 @@ module.exports = {
         //construct embed
         const returnEmbed = {
             title: `${clearState}${dani} ${profile.dan_id ? "|" : ""} ${profile.my_don_name}`,
-            color: 15410003,
+            color: EMBED_COLOUR,
             description: `Title: ${profile.title}\nPlay Count: ${profile.play_count}`,
             thumbnail: {
                 url: "attachment://avatar.png",
             }, author: {
-                name: `Profile`
+                name: COMMAND_NAME
             },
             fields: [
                 {

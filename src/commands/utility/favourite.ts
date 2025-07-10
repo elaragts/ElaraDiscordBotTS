@@ -8,6 +8,9 @@ import {
 import {getBaidFromDiscordId} from "../../database/queries/userDiscord";
 import {getFavouriteSongsArray, setFavouriteSongsArray} from "../../database/queries/userData";
 import {getSongTitle} from "../../utils/datatable";
+import {EMBED_COLOUR} from "../../constants/discord";
+
+const COMMAND_NAME = "Favourite"
 
 module.exports = {
     data: new SlashCommandBuilder()
@@ -23,18 +26,20 @@ module.exports = {
     autocomplete
     ,
     async execute(interaction: ChatInputCommandInteraction) {
+        const songOption = interaction.options.getString("song")!
         if (!isUserBoostingServer(interaction.user.id)) {
-            await replyWithErrorMessage(interaction, "Favourite", "You need to be a server booster to use this command!");
+            await replyWithErrorMessage(interaction, COMMAND_NAME, "You need to be a server booster to use this command!");
             return;
         }
         const baid = await getBaidFromDiscordId(interaction.user.id);
         if (baid === undefined) {
-            await replyWithErrorMessage(interaction, "Favourite", "You have not linked your discord account to your card yet!");
+            await replyWithErrorMessage(interaction, COMMAND_NAME, "You have not linked your discord account to your card yet!");
             return;
         }
-        const songValidationResult = await validateSongInput(interaction, interaction.options.getString("song")!, "Favourite");
+        const songValidationResult = await validateSongInput(interaction, songOption, COMMAND_NAME);
         if (songValidationResult === undefined) return;
-        const [uniqueId, lang] = songValidationResult;
+        const uniqueId = songValidationResult.uniqueId
+        const lang = songValidationResult.lang;
         let favouriteSongs = (await getFavouriteSongsArray(baid))!;
         const i = favouriteSongs.indexOf(uniqueId);
         const songTitle = getSongTitle(uniqueId, lang);
@@ -49,9 +54,9 @@ module.exports = {
         await setFavouriteSongsArray(baid, favouriteSongs);
         const returnEmbed = {
             description: message,
-            color: 15410003,
+            color: EMBED_COLOUR,
             author: {
-                name: "Favourite"
+                name: COMMAND_NAME
             },
         };
         await interaction.reply({embeds: [returnEmbed]});

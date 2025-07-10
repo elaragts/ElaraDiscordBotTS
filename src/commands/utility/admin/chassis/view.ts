@@ -1,5 +1,8 @@
 ﻿import {ChatInputCommandInteraction} from "discord.js";
 import {getChassisIdFromDiscordId, getChassisIdStatus} from "../../../../database/queries/chassis";
+import {EMBED_COLOUR} from "../../../../constants/discord";
+
+const COMMAND_NAME = "View ChassisID"
 
 export async function execute(interaction: ChatInputCommandInteraction)  {
     const discordId = interaction.options.getUser('user')!.id
@@ -8,18 +11,18 @@ export async function execute(interaction: ChatInputCommandInteraction)  {
     if (chassisId === undefined) {
         returnEmbed = {
             description: `User <@${discordId}> does not have a ChassisID`,
-            color: 15410003,
+            color: EMBED_COLOUR,
             author: {
-                name: "View ChassisID"
+                name: COMMAND_NAME
             },
         };
     } else {
         let status = (await getChassisIdStatus(chassisId))! ? 'Active' : 'Disabled';
         returnEmbed = {
             description: `ChassisID \`${chassisId}\` belongs to <@${discordId}>, status: \`${status}\``,
-            color: 15410003,
+            color: EMBED_COLOUR,
             author: {
-                name: "View ChassisID"
+                name: COMMAND_NAME
             },
         };
     }

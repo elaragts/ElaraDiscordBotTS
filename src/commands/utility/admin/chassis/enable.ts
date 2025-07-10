@@ -1,6 +1,10 @@
 ﻿import {getChassisIdFromDiscordId, getDiscordIdFromChassisId, setChassisStatus} from "../../../../database/queries/chassis";
 import {replyWithErrorMessage} from "../../../../utils/discord";
 import {ChatInputCommandInteraction} from "discord.js";
+import {EMBED_COLOUR} from "../../../../constants/discord";
+
+const COMMAND_NAME = "Enable ChassisID"
+
 
 export async function execute(interaction: ChatInputCommandInteraction)  {
     let discordId, chassisId;
@@ -11,23 +15,23 @@ export async function execute(interaction: ChatInputCommandInteraction)  {
         discordId = userOption.id;
         chassisId = await getChassisIdFromDiscordId(discordId);
         if (chassisId === undefined) {
-            return await replyWithErrorMessage(interaction, 'Enable ChassisID', `User <@${discordId}> does not have a ChassisID`);
+            return await replyWithErrorMessage(interaction, COMMAND_NAME, `User <@${discordId}> does not have a ChassisID`);
         }
     } else if (chassisIdOption) {
         chassisId = chassisIdOption;
         discordId = await getDiscordIdFromChassisId(chassisId);
         if (discordId === undefined) {
-            return await replyWithErrorMessage(interaction, 'Enable ChassisID', `ChassisID \`${chassisId}\` not found`);
+            return await replyWithErrorMessage(interaction, COMMAND_NAME, `ChassisID \`${chassisId}\` not found`);
         }
     } else {
-        return await replyWithErrorMessage(interaction, 'Enable ChassisID', 'ChassisID or user option required');
+        return await replyWithErrorMessage(interaction, COMMAND_NAME, 'ChassisID or user option required');
     }
     await setChassisStatus(chassisId, true);
     const returnEmbed = {
         description: `Enabled <@${discordId}>'s ChassisID \`${chassisId}\``,
-        color: 15410003,
+        color: EMBED_COLOUR,
         author: {
-            name: "Enable ChassisID"
+            name: COMMAND_NAME
         },
     };
     await interaction.reply({embeds: [returnEmbed]});

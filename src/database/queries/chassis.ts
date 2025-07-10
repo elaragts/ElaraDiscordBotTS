@@ -89,7 +89,7 @@ export async function getUserChassisList(chassisId: number, offset: number): Pro
 export async function getUserUsedChassisList(baid: number, offset: number): Promise<UserChassisChassisListItem[]> {
     return await db
         .selectFrom("user_chassis")
-        .innerJoin("chassis", "chassis.chassis_id", "user_chassis.chassis_id")
+        .leftJoin("chassis", "chassis.chassis_id", "user_chassis.chassis_id")
         .select([
             "user_chassis.chassis_id as chassis_id",
             "chassis.discord_id as discord_id",

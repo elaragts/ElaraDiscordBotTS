@@ -11,11 +11,13 @@ import {difficultyIdToName} from "../../utils/common";
 import {crownIdToEmoji, difficultyToEmoji, judgeIdToEmoji, rankIdToEmoji} from "../../utils/config";
 import {getCostume} from "../../database/queries/userData";
 import {createCostumeAvatar} from "../../utils/costume";
+import {EMBED_COLOUR} from "../../constants/discord";
 
+const COMMAND_NAME = 'My Stats'
 module.exports = {
     data: new SlashCommandBuilder()
         .setName("mystats")
-        .setDescription("My Stats")
+        .setDescription(COMMAND_NAME)
         .addStringOption(option =>
             option.setName("song")
                 .setDescription("Song name")
@@ -51,7 +53,7 @@ module.exports = {
         if (userOption) {
             baid = await getBaidFromDiscordId(userOption.id);
             if (baid === undefined) {
-                await editReplyWithErrorMessage(interaction, "My Stats", "This user has not linked their discord account to their card yet!");
+                await editReplyWithErrorMessage(interaction, COMMAND_NAME, "This user has not linked their discord account to their card yet!");
                 return;
             }
             user = userOption;
@@ -59,23 +61,24 @@ module.exports = {
             user = interaction.user;
             baid = await getBaidFromDiscordId(interaction.user.id);
             if (baid === undefined) {
-                await editReplyWithErrorMessage(interaction, "My Stats", "You have not linked your discord account to your card yet!");
+                await editReplyWithErrorMessage(interaction, COMMAND_NAME, "You have not linked your discord account to your card yet!");
                 return;
             }
         }
         //error checking
-        const songValidationResult = await validateSongInput(interaction, songInput, "My Stats");
+        const songValidationResult = await validateSongInput(interaction, songInput, COMMAND_NAME);
         if (songValidationResult === undefined) return;
-        const [uniqueId, lang] = songValidationResult;
+        const uniqueId = songValidationResult.uniqueId
+        const lang = songValidationResult.lang;
         const song = await getBestScore(uniqueId, difficulty, baid);
         if (song === undefined) {
             const returnEmbed = {
                 title: `${user.username} | ${getSongTitle(uniqueId, lang)} | ${difficultyIdToName(difficulty, lang)}${difficultyToEmoji(difficulty)}★${getSongStars(uniqueId, difficulty)}`,
                 description: "No play data available for this song.",
-                color: 15410003,
+                color: EMBED_COLOUR,
 
                 author: {
-                    name: "My Stats"
+                    name: COMMAND_NAME
                 },
                 timestamp: new Date().toISOString()
             };
@@ -125,10 +128,10 @@ module.exports = {
         //construct embed
         const returnEmbed = {
             title: `${song.my_don_name} | ${getSongTitle(uniqueId, lang)} | ${difficultyIdToName(difficulty, lang)}${difficultyToEmoji(difficulty)}★${getSongStars(uniqueId, difficulty)}`,
-            color: 15410003,
+            color: EMBED_COLOUR,
             description: `${leaderboardLabel}: ${song.leaderboard_position}${leaderboardSuffix}\n${playCountLabel}: ${song.play_count}\n${clearCountLabel}: ${song.clear_count}\n${fullComboLabel}: ${song.full_combo_count}\n${zenryouLabel}: ${song.all_perfect_count}\n## ${desc}${song.score}${pointsLabel}`,
             author: {
-                name: `My Stats`
+                name: COMMAND_NAME
             },
             thumbnail: {
                 url: "attachment://avatar.png"

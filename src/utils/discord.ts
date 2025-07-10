@@ -4,12 +4,14 @@ import logger from "./logger";
 import {songResultSeparator} from "../constants/datatable";
 import {client} from "../bot/client";
 import {guildId, adminRoleId, serverBoostRoleId} from "../../config.json"
+import {SearchSongResult, SongValidationResult} from "../models/discord";
+import {ERROR_COLOUR} from "../constants/discord";
 
 export async function replyWithErrorMessage(interaction: ChatInputCommandInteraction, author: string, reason: string): Promise<void> {
     const errorEmbed = {
         title: 'Error',
         description: reason,
-        color: 13369344,
+        color: ERROR_COLOUR,
         author: {
             name: author
         }
@@ -21,7 +23,7 @@ export async function editReplyWithErrorMessage(interaction: ChatInputCommandInt
     const errorEmbed = {
         title: 'Error',
         description: reason,
-        color: 13369344,
+        color: ERROR_COLOUR,
         author: {
             name: author
         }
@@ -41,7 +43,7 @@ export async function returnSongAutocomplete(interaction: AutocompleteInteractio
     const focusedValue = interaction.options.getFocused(); // Get query
 
     // Timeout promise
-    const timeoutPromise: Promise<Array<[string, string]>> = new Promise((resolve) => setTimeout(() => resolve([]), 2500)); // 2.5 seconds
+    const timeoutPromise: Promise<SearchSongResult[]> = new Promise((resolve) => setTimeout(() => resolve([]), 2500)); // 2.5 seconds
 
     // Autocomplete promise
     const autocompletePromise = searchSong(focusedValue);
@@ -52,7 +54,7 @@ export async function returnSongAutocomplete(interaction: AutocompleteInteractio
     filteredPromise.then(filtered => {
         // Send result back to Discord
         interaction.respond(
-            filtered.map(choice => ({name: choice[0], value: choice[1]}))
+            filtered.map(choice => ({name: choice.title, value: choice.songOutput}))
         ).catch(err => {
             logger.error({err: err}, 'Error responding to interaction');
         });
@@ -61,7 +63,7 @@ export async function returnSongAutocomplete(interaction: AutocompleteInteractio
     });
 }
 
-export async function validateSongInput(interaction: ChatInputCommandInteraction, songInput: string, commandName: string): Promise<[number, number] | undefined> {
+export async function validateSongInput(interaction: ChatInputCommandInteraction, songInput: string, commandName: string): Promise<SongValidationResult | undefined> {
     let uniqueId, lang: number;
     if (songInput.includes(songResultSeparator)) { //search with autocomplete
         const [uniqueIdStr, langStr] = songInput.split(songResultSeparator);
@@ -86,16 +88,17 @@ export async function validateSongInput(interaction: ChatInputCommandInteraction
             await replyWithErrorMessage(interaction, commandName, 'Bad input: uniqueID not found');
             return undefined;
         }
+        return {uniqueId: uniqueId, lang: lang};
     } else { //search without autocomplete
         let searchResult = searchSongSync(songInput);
-        if (searchResult.length === 1) {
+        if (searchResult.length === 0) {
             await editReplyWithErrorMessage(interaction, commandName, `Song ${songInput} not found!`);
             return undefined;
         }
-        const [_, result] = searchResult[0];
-        [uniqueId, lang] = (await validateSongInput(interaction, songInput, result))!; //this is stupid but works
+        const resultOutput = searchResult[0].songOutput;
+        //parse search result
+        return await validateSongInput(interaction, resultOutput, commandName);
     }
-    return [uniqueId, lang]
 }
 
 export function isUserBoostingServer(userId: string): boolean {

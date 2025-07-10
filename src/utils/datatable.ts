@@ -3,6 +3,7 @@ import {MusicinfoItem, SongInfo} from "../models/datatable";
 import {Difficulty, Language, songResultSeparator} from "../constants/datatable";
 
 import {musicinfoPath, wordlistPath} from "../../config.json";
+import {SearchSongResult} from "../models/discord";
 
 const songTitles: Map<number, [string, string]> = new Map();
 const musicinfo: Map<number, MusicinfoItem> = new Map();
@@ -91,22 +92,22 @@ function initializeWordlist() {
 }
 
 
-export function searchSong(query: string): Promise<Array<[string, string]>> {
+export function searchSong(query: string): Promise<SearchSongResult[]> {
     return Promise.resolve(searchSongSync(query));
 }
 
-export function searchSongSync(query: string): Array<[string, string]> {
+export function searchSongSync(query: string): SearchSongResult[] {
     if (query === "") return [];
     query = query.toLowerCase();
-    let results: Array<[string, string]> = []; // Return array
+    let results: SearchSongResult[] = []; // Return array
     for (const [uniqueId, titles] of songTitles.entries()) {
         for (const i in titles) {
             if (titles[i].toLowerCase() === query) {
-                return [[titles[i], `${uniqueId}${songResultSeparator}${i}`]];
+                return [{title: titles[i], songOutput: `${uniqueId}${songResultSeparator}${i}`}];
             }
             if (titles[i].toLowerCase().includes(query)) {
                 // Append the song for a partial match
-                if (results.length < 10) results.push([titles[i], `${uniqueId}${songResultSeparator}${i}`]); // Limit results to 10
+                if (results.length < 10) results.push({title: titles[i], songOutput: `${uniqueId}${songResultSeparator}${i}`}); // Limit results to 10
             }
         }
     }

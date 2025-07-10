@@ -1,6 +1,9 @@
 ﻿import {SlashCommandBuilder, MessageFlags, ChatInputCommandInteraction} from "discord.js";
 import {getBaidFromDiscordId, unlinkDiscordFromBaid} from "../../database/queries/userDiscord";
 import {replyWithErrorMessage} from "../../utils/discord";
+import {EMBED_COLOUR} from "../../constants/discord";
+
+const COMMAND_NAME = "Unlink"
 
 
 module.exports = {
@@ -11,7 +14,7 @@ module.exports = {
     async execute(interaction: ChatInputCommandInteraction) {
         const user = interaction.user;
         if (await getBaidFromDiscordId(user.id) === undefined) {
-            await replyWithErrorMessage(interaction, "link", "Your account is not linked to an EGTS profile yet");
+            await replyWithErrorMessage(interaction, COMMAND_NAME, "Your account is not linked to an EGTS profile yet");
             return;
         }
 
@@ -19,9 +22,9 @@ module.exports = {
         await interaction.reply({
             embeds: [{
                 title: "Successfully unlinked discord account",
-                color: 13369344,
+                color: EMBED_COLOUR,
                 author: {
-                    name: "Unlink"
+                    name: COMMAND_NAME
                 }
             }], flags: MessageFlags.Ephemeral
         });
