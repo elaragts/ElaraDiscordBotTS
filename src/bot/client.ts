@@ -1,7 +1,7 @@
 ﻿import {GatewayIntentBits} from "discord.js";
-import {ExtendedClient} from "../models/discord";
+import {ClientExtended} from "../models/discord";
 
-export const client = new ExtendedClient({
+export const client = new ClientExtended({
     intents: [
         GatewayIntentBits.Guilds,
         GatewayIntentBits.DirectMessages,

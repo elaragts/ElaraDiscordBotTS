@@ -1,19 +1,14 @@
 ﻿import {AutocompleteInteraction, ChatInputCommandInteraction, Collection, Events, MessageFlags} from "discord.js";
-import {Command, ExtendedClient} from "../models/discord";
-import {getExtendedClient} from "../utils/client";
+import {Command, ClientExtended} from "../models/discord";
 import path from "node:path";
 import fs from "node:fs";
 import logger from "../utils/logger";
-import {safeGetSubcommand} from "../utils/discord";
+import {getExtendedClient, getExtendedChatInputCommandInteraction,safeGetSubcommand} from "../utils/discord";
 
-export function registerHandlers(client: ExtendedClient) {
+export function registerHandlers(client: ClientExtended) {
 
     client.once(Events.ClientReady, readyClient => {
         logger.info(`Ready! Logged in as ${readyClient.user.tag}`);
-        // backup.backupAndUpload(client)
-        // setInterval(() => {
-        //     backup.backupAndUpload(client);
-        // }, 1000 * 60 * 60);
     });
 
     client.on(Events.InteractionCreate, async interaction => {
@@ -46,10 +41,10 @@ export function registerHandlers(client: ExtendedClient) {
 }
 
 
-async function handleChatInputCommand(interaction: ChatInputCommandInteraction){
+async function handleChatInputCommand(baseInteraction: ChatInputCommandInteraction){
+    const interaction = getExtendedChatInputCommandInteraction(baseInteraction);
     const client = getExtendedClient(interaction.client);
     const command = client.commands.get(interaction.commandName);
-
     if (!command) {
         logger.error(`No command matching ${interaction.commandName} was found`);
         return;

@@ -1,11 +1,22 @@
-﻿import {AutocompleteInteraction, ChatInputCommandInteraction, MessageFlags} from "discord.js";
+﻿import {AutocompleteInteraction, ChatInputCommandInteraction, Client, MessageFlags} from "discord.js";
 import {doesUniqueIdExist, isValidLang, searchSong, searchSongSync} from "./datatable";
 import logger from "./logger";
 import {songResultSeparator} from "../constants/datatable";
 import {client} from "../bot/client";
 import {guildId, adminRoleId, serverBoostRoleId} from "../../config.json"
-import {SearchSongResult, SongValidationResult} from "../models/discord";
+import {
+    ChatInputCommandInteractionExtended, chatInputCommandInteractionExtensions,
+    ClientExtended,
+    SearchSongResult,
+    SongValidationResult
+} from "../models/discord";
 import {ERROR_COLOUR} from "../constants/discord";
+
+export const getExtendedClient = (client: Client): ClientExtended => client as ClientExtended;
+
+export function getExtendedChatInputCommandInteraction(interaction: ChatInputCommandInteraction): ChatInputCommandInteractionExtended {
+    return Object.assign(interaction, chatInputCommandInteractionExtensions)
+}
 
 export async function replyWithErrorMessage(interaction: ChatInputCommandInteraction, author: string, reason: string): Promise<void> {
     const errorEmbed = {
