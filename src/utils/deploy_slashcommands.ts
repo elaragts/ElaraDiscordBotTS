@@ -1,11 +1,11 @@
-﻿import {REST, Routes} from "discord.js";
-import {guildId, deployment} from "../../config.json";
-import {data as adminCommand} from "../commands/utility/admin"
-import fs from "node:fs";
-import path from "node:path";
-import dotenv from "dotenv";
+﻿import {REST, Routes} from 'discord.js';
+import config from '#config' with {type: 'json'};
+import {data as adminCommand} from '../commands/utility/admin/index.js';
+import fs from 'node:fs';
+import path from 'node:path';
+import dotenv from 'dotenv';
 
-dotenv.config({path: path.join(__dirname, "..", "..", ".env")});
+dotenv.config({path: path.join(__dirname, '..', '..', '.env')});
 
 const commands = [];
 // Grab all the command folders from the commands directory you created earlier
@@ -35,7 +35,7 @@ for (const folder of commandFolders) {
 
 }
 if (process.env.BOT_TOKEN === undefined || process.env.CLIENT_ID === undefined) {
-    throw new Error("BOT_TOKEN & CLIENT_ID environment variables required");
+    throw new Error('BOT_TOKEN & CLIENT_ID environment variables required');
 }
 
 // Construct and prepare an instance of the REST module
@@ -47,10 +47,10 @@ const rest = new REST().setToken(process.env.BOT_TOKEN);
         console.log(`Started refreshing ${commands.length} application (/) commands.`);
 
         // The put method is used to fully refresh all commands in the guild with the current set
-        const data: any = await rest.put(Routes.applicationCommands(process.env.CLIENT_ID!), {body: commands})
+        const data: any = await rest.put(Routes.applicationCommands(process.env.CLIENT_ID!), {body: commands});
         const data2: any = await rest.put(
-            Routes.applicationGuildCommands(process.env.CLIENT_ID!, guildId),
-            {body: deployment === "production" ? [adminCommand] : commands},
+            Routes.applicationGuildCommands(process.env.CLIENT_ID!, config.guildId),
+            {body: config.deployment === 'production' ? [adminCommand] : commands},
         );
 
         console.log(`Successfully reloaded ${data.length} application (/) commands.`);

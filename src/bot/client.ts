@@ -1,5 +1,5 @@
-﻿import {GatewayIntentBits} from "discord.js";
-import {ClientExtended} from "../models/discord";
+﻿import {GatewayIntentBits} from 'discord.js';
+import {ClientExtended} from '@models/discord.js';
 
 export const client = new ClientExtended({
     intents: [

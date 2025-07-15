@@ -1,4 +1,4 @@
-﻿export const songResultSeparator = "|";
+﻿export const songResultSeparator = '|';
 
 export enum Language {
     ENGLISH,
@@ -6,11 +6,11 @@ export enum Language {
 }
 
 export enum Difficulty {
-    EASY=1,
-    NORMAL=2,
-    HARD=3,
-    ONI=4,
-    URA=5
+    EASY = 1,
+    NORMAL = 2,
+    HARD = 3,
+    ONI = 4,
+    URA = 5
 }
 
 export enum Genre {

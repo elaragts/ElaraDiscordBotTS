@@ -1,4 +1,4 @@
-﻿import {Difficulty} from "../constants/datatable";
+﻿import {Difficulty} from "@constants/datatable.js";
 
 export type DifficultyMap<T> = {
     [key in Difficulty]: T;

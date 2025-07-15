@@ -3,11 +3,19 @@
   "version": "1.0.0",
   "description": "",
   "main": "dist/index.js",
+  "type": "module",
+  "ts-node": {
+    "esm": true,
+    "experimentalSpecifierResolution": "node"
+  },
+  "imports": {
+    "#config": "./config.json"
+  },
   "scripts": {
     "build": "tsc",
     "start-fast": "tsc && node dist/src/index.js",
-    "start": "ts-node src/index.ts",
-    "dev": "concurrently \"tsc -w\" \"nodemon --watch dist dist/src/index.js\""
+    "start": "tsx src/index.ts",
+    "dev": "tsx watch src/index.ts"
   },
   "dependencies": {
     "canvas": "^3.1.0",
@@ -26,7 +34,8 @@
     "nodemon": "^3.1.10",
     "pino-pretty": "^13.0.0",
     "ts-node": "^10.9.2",
-    "typescript": "^5.5.3"
+    "tsx": "^4.20.3",
+    "typescript": "^5.8.3"
   },
   "private": true
 }

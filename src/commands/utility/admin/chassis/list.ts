@@ -2,21 +2,21 @@
     getChassisIdFromDiscordId,
     getDiscordIdFromChassisId,
     getUserChassisList, getUserUsedChassisList,
-} from "../../../../database/queries/chassis";
-import {replyWithErrorMessage} from "../../../../utils/discord";
-import {ChatInputCommandInteraction, APIEmbed} from "discord.js";
-import {doesBaidExist, getMyDonName} from "../../../../database/queries/userData";
-import {EMBED_COLOUR} from "../../../../constants/discord";
+} from '@database/queries/chassis.js';
+import {replyWithErrorMessage} from '@utils/discord.js';
+import {ChatInputCommandInteraction, APIEmbed} from 'discord.js';
+import {doesBaidExist, getMyDonName} from '@database/queries/userData.js';
+import {EMBED_COLOUR} from '@constants/discord.js';
 
-const COMMAND_NAME = "List ChassisID"
+const COMMAND_NAME = 'List ChassisID';
 
 
 export async function execute(interaction: ChatInputCommandInteraction) {
     let discordId, chassisId;
-    const userOption = interaction.options.getUser("user");
-    const chassisIdOption = interaction.options.getNumber("chassisid");
-    const page = interaction.options.getInteger("page") || 1;
-    const baid = interaction.options.getNumber("baid");
+    const userOption = interaction.options.getUser('user');
+    const chassisIdOption = interaction.options.getNumber('chassisid');
+    const page = interaction.options.getInteger('page') || 1;
+    const baid = interaction.options.getNumber('baid');
     let returnEmbed: APIEmbed;
     if (baid) {
         if (!await doesBaidExist(baid)) {
@@ -24,7 +24,7 @@ export async function execute(interaction: ChatInputCommandInteraction) {
         }
         const myDonName = (await getMyDonName(baid))!;
         const result = await getUserUsedChassisList(baid, (page - 1) * 10);
-        let desc = result.length > 0 ? "" : "No results found";
+        let desc = result.length > 0 ? '' : 'No results found';
         for (let i in result) {
             desc += `${i + 1}. \`${result[i].chassis_id}\` - Assigned to: <@${result[i].discord_id}> - Last used: ${result[i].last_used.toDateString()}\n`;
         }
@@ -50,12 +50,12 @@ export async function execute(interaction: ChatInputCommandInteraction) {
                 return await replyWithErrorMessage(interaction, COMMAND_NAME, `ChassisID \`${chassisId}\` not found`);
             }
         } else {
-            return await replyWithErrorMessage(interaction, COMMAND_NAME, "ChassisID or user option required");
+            return await replyWithErrorMessage(interaction, COMMAND_NAME, 'ChassisID or user option required');
         }
         const result = await getUserChassisList(chassisId, (page - 1) * 10);
-        let desc = result.length > 0 ? "" : "No results found";
+        let desc = result.length > 0 ? '' : 'No results found';
         for (let i in result) {
-            desc += `${i + 1}. baid: \`${result[i].baid}\` (${result[i].my_don_name}) - ${result[i].discord_id ? `<@${result[i].discord_id}> - ` : ""}Last used: ${result[i].last_used.toDateString()}\n`;
+            desc += `${i + 1}. baid: \`${result[i].baid}\` (${result[i].my_don_name}) - ${result[i].discord_id ? `<@${result[i].discord_id}> - ` : ''}Last used: ${result[i].last_used.toDateString()}\n`;
         }
         returnEmbed = {
             description: desc,

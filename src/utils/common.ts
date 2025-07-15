@@ -1,4 +1,4 @@
-﻿import {Difficulty, Genre, Language} from "../constants/datatable";
+﻿import {Difficulty, Genre, Language} from "@constants/datatable.js";
 
 function isEnumValueInRange<T extends Record<string, string | number>>(enumObj: T, value: number): boolean {
     return Object.values(enumObj)

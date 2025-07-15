@@ -5,39 +5,39 @@
     ButtonStyle,
     ChatInputCommandInteraction, MessageComponentInteraction,
     User, InteractionResponse, MessageFlags
-} from "discord.js";
-import {returnSongAutocomplete as autocomplete, replyWithErrorMessage, validateSongInput} from "../../utils/discord";
-import {client} from "../../bot/client";
-import {getBaidFromDiscordId} from "../../database/queries/userDiscord";
-import {getFavouriteSongsArray, getMyDonName, setFavouriteSongsArray} from "../../database/queries/userData";
-import {getNoteCountOfSong, getSongStars, getSongTitle} from "../../utils/datatable";
-import {crownIdToEmoji, difficultyToEmoji, judgeIdToEmoji, rankIdToEmoji} from "../../utils/config";
-import {getLatestUserPlay, getMaxSongPlayDataId} from "../../database/queries/songPlayBestData";
-import {SongPlay} from "../../models/queries";
-import {addBattle} from "../../database/queries/battle";
-import {Difficulty} from "../../constants/datatable";
-import {EMBED_COLOUR} from "../../constants/discord";
+} from 'discord.js';
+import {returnSongAutocomplete as autocomplete, replyWithErrorMessage, validateSongInput} from '@utils/discord.js';
+import {client} from '@bot/client.js';
+import {getBaidFromDiscordId} from '@database/queries/userDiscord.js';
+import {getFavouriteSongsArray, getMyDonName, setFavouriteSongsArray} from '@database/queries/userData.js';
+import {getNoteCountOfSong, getSongStars, getSongTitle} from '@utils/datatable.js';
+import {crownIdToEmoji, difficultyToEmoji, judgeIdToEmoji, rankIdToEmoji} from '@utils/config.js';
+import {getLatestUserPlay, getMaxSongPlayDataId} from '@database/queries/songPlayBestData.js';
+import {SongPlay} from '@models/queries.js';
+import {addBattle} from '@database/queries/battle.js';
+import {Difficulty} from '@constants/datatable.js';
+import {EMBED_COLOUR} from '@constants/discord.js';
 
-const COMMAND_NAME = "Battle";
+const COMMAND_NAME = 'Battle';
 module.exports = {
     data: new SlashCommandBuilder()
-        .setName("battle")
-        .setDescription("Battle against another user")
+        .setName('battle')
+        .setDescription('Battle against another user')
         .addStringOption(option =>
-            option.setName("song")
-                .setDescription("Song name")
+            option.setName('song')
+                .setDescription('Song name')
                 .setRequired(true)
                 .setAutocomplete(true))
         .addStringOption(option =>
-            option.setName("difficulty")
-                .setDescription("Difficulty of the map")
+            option.setName('difficulty')
+                .setDescription('Difficulty of the map')
                 .setRequired(true)
                 .addChoices(
-                    {name: "かんたん/Easy", value: Difficulty.EASY.toString()},
-                    {name: "ふつう/Normal", value: Difficulty.NORMAL.toString()},
-                    {name: "むずかしい/Hard", value: Difficulty.HARD.toString()},
-                    {name: "おに/Oni", value: Difficulty.ONI.toString()},
-                    {name: "おに (裏)/Ura Oni", value: Difficulty.URA.toString()}
+                    {name: 'かんたん/Easy', value: Difficulty.EASY.toString()},
+                    {name: 'ふつう/Normal', value: Difficulty.NORMAL.toString()},
+                    {name: 'むずかしい/Hard', value: Difficulty.HARD.toString()},
+                    {name: 'おに/Oni', value: Difficulty.ONI.toString()},
+                    {name: 'おに (裏)/Ura Oni', value: Difficulty.URA.toString()}
                 )
         )
     ,
@@ -46,30 +46,30 @@ module.exports = {
     async execute(interaction: ChatInputCommandInteraction) {
         const userOne = interaction.user;
         if (client.ongoingBattles.has(userOne.id)) {
-            await replyWithErrorMessage(interaction, COMMAND_NAME, "You already started a battle");
+            await replyWithErrorMessage(interaction, COMMAND_NAME, 'You already started a battle');
             return;
         }
         //buttons
         const join = new ButtonBuilder()
-            .setCustomId("join")
-            .setLabel("Join Battle")
+            .setCustomId('join')
+            .setLabel('Join Battle')
             .setStyle(ButtonStyle.Primary);
 
         const cancel = new ButtonBuilder()
-            .setCustomId("cancel")
-            .setLabel("Cancel Battle")
+            .setCustomId('cancel')
+            .setLabel('Cancel Battle')
             .setStyle(ButtonStyle.Danger);
 
         const joinRow = new ActionRowBuilder()
             .addComponents(join, cancel);
 
         //execute
-        const songInput = interaction.options.getString("song");
-        const difficulty = parseInt(interaction.options.getString("difficulty")!);
+        const songInput = interaction.options.getString('song');
+        const difficulty = parseInt(interaction.options.getString('difficulty')!);
         const baid = await getBaidFromDiscordId(interaction.user.id);
-        const winCondition = "score";
+        const winCondition = 'score';
         if (baid === undefined) {
-            await replyWithErrorMessage(interaction, COMMAND_NAME, "You have not linked your discord account to your card yet!");
+            await replyWithErrorMessage(interaction, COMMAND_NAME, 'You have not linked your discord account to your card yet!');
             return;
         }
         const nameOne = (await getMyDonName(baid))!;
@@ -80,7 +80,7 @@ module.exports = {
         const lang = songValidationResult.lang;
 
         if (getSongStars(uniqueId, difficulty) === 0) {
-            await replyWithErrorMessage(interaction, COMMAND_NAME, "This song does not have a chart for this difficulty");
+            await replyWithErrorMessage(interaction, COMMAND_NAME, 'This song does not have a chart for this difficulty');
             return;
         }
         client.ongoingBattles.add(userOne.id);
@@ -101,10 +101,10 @@ module.exports = {
 
         const joinCollector = joinResponse.createMessageComponentCollector({filter: _ => true, time: 600000}); // i => true (I am 7 picoseconds away from shooting myself)
 
-        joinCollector.on("collect", async i => {
-            if (i.customId === "cancel") {
+        joinCollector.on('collect', async i => {
+            if (i.customId === 'cancel') {
                 if (i.user.id !== userOne.id) {
-                    await i.reply({content: "Only the host can cancel the battle", flags: MessageFlags.Ephemeral});
+                    await i.reply({content: 'Only the host can cancel the battle', flags: MessageFlags.Ephemeral});
                     return;
                 }
                 await interaction.editReply({
@@ -118,27 +118,27 @@ module.exports = {
                     }], components: []
                 });
                 client.ongoingBattles.delete(userOne.id);
-                joinCollector.stop("battle_canceled");
-            } else if (i.customId === "join") {
+                joinCollector.stop('battle_canceled');
+            } else if (i.customId === 'join') {
                 if (i.user.id === interaction.user.id) {
-                    await i.reply({content: "You can't join your own battle!", flags: MessageFlags.Ephemeral});
+                    await i.reply({content: 'You can\'t join your own battle!', flags: MessageFlags.Ephemeral});
                     return;
                 }
                 if (client.ongoingBattles.has(i.user.id)) {
-                    await i.reply({content: "You are already in a battle!", flags: MessageFlags.Ephemeral});
+                    await i.reply({content: 'You are already in a battle!', flags: MessageFlags.Ephemeral});
                     return;
                 }
                 if (await getBaidFromDiscordId(i.user.id) === undefined) {
-                    await i.reply({content: "You haven't linked your account yet", flags: MessageFlags.Ephemeral});
+                    await i.reply({content: 'You haven\'t linked your account yet', flags: MessageFlags.Ephemeral});
                     return;
                 }
-                joinCollector.stop("battle_joined");
+                joinCollector.stop('battle_joined');
                 await confirmBattle(i, userOne, i.user);
             }
         });
 
-        joinCollector.on("end", async (_, reason) => {
-            if (reason === "time") {
+        joinCollector.on('end', async (_, reason) => {
+            if (reason === 'time') {
                 client.ongoingBattles.delete(userOne.id);
                 await interaction.editReply({
                     embeds: [{
@@ -156,12 +156,12 @@ module.exports = {
         const confirmBattle = async (i: MessageComponentInteraction, userOne: User, userTwo: User) => {
             const nameTwo = await getMyDonName((await getBaidFromDiscordId(userTwo.id))!);
             const start = new ButtonBuilder()
-                .setCustomId("start")
-                .setLabel("Start Battle")
+                .setCustomId('start')
+                .setLabel('Start Battle')
                 .setStyle(ButtonStyle.Primary);
             const cancel = new ButtonBuilder()
-                .setCustomId("cancel")
-                .setLabel("Cancel Battle")
+                .setCustomId('cancel')
+                .setLabel('Cancel Battle')
                 .setStyle(ButtonStyle.Danger);
 
             const confirmRow = new ActionRowBuilder()
@@ -181,17 +181,17 @@ module.exports = {
                 time: 300000
             });
 
-            confirmCollector.on("collect", async x => {
-                if (x.customId === "start") {
+            confirmCollector.on('collect', async x => {
+                if (x.customId === 'start') {
                     if (x.user.id !== userOne.id) {
-                        await x.reply({content: "Only the host can start the battle", flags: MessageFlags.Ephemeral});
+                        await x.reply({content: 'Only the host can start the battle', flags: MessageFlags.Ephemeral});
                         return;
                     }
-                    confirmCollector.stop("battle_started");
+                    confirmCollector.stop('battle_started');
                     await startBattle(x, joinResponse, userOne, userTwo);
-                } else if (x.customId === "cancel") {
+                } else if (x.customId === 'cancel') {
                     if (x.user.id !== userOne.id) {
-                        await x.reply({content: "Only the host can cancel the battle", flags: MessageFlags.Ephemeral});
+                        await x.reply({content: 'Only the host can cancel the battle', flags: MessageFlags.Ephemeral});
                         return;
                     }
                     await x.update({
@@ -206,7 +206,7 @@ module.exports = {
                     });
                     client.ongoingBattles.delete(userOne.id);
                     client.ongoingBattles.delete(userTwo.id);
-                    confirmCollector.stop("battle_canceled");
+                    confirmCollector.stop('battle_canceled');
                 }
             });
         };
@@ -222,8 +222,8 @@ module.exports = {
             let userOnePlay: SongPlay;
             let userTwoPlay: SongPlay;
             const submit = new ButtonBuilder()
-                .setCustomId("submit")
-                .setLabel("Submit Score")
+                .setCustomId('submit')
+                .setLabel('Submit Score')
                 .setStyle(ButtonStyle.Success);
 
             const submitRow = new ActionRowBuilder()
@@ -246,16 +246,16 @@ module.exports = {
                 time: 600000
             });
 
-            submissionCollector.on("collect", async i => {
-                if (i.customId !== "submit") return;
+            submissionCollector.on('collect', async i => {
+                if (i.customId !== 'submit') return;
                 if (i.user.id === userOne.id && userOnePlay !== undefined || i.user.id === userTwo.id && userTwoPlay !== undefined) {
-                    await i.reply({content: "You already submitted a score", flags: MessageFlags.Ephemeral});
+                    await i.reply({content: 'You already submitted a score', flags: MessageFlags.Ephemeral});
                     return;
                 }
                 const baid = (await getBaidFromDiscordId(i.user.id))!;
                 const songPlay = await getLatestUserPlay(baid, uniqueId, difficulty);
                 if (songPlay === undefined || songPlay.id <= minSongPlayId) {
-                    await i.reply({content: "No score submitted", flags: MessageFlags.Ephemeral});
+                    await i.reply({content: 'No score submitted', flags: MessageFlags.Ephemeral});
                     return;
                 }
                 if (i.user.id === userOne.id) {
@@ -265,18 +265,18 @@ module.exports = {
                 }
                 await updateBattleEmbed(i);
                 if (userOnePlay !== undefined && userTwoPlay !== undefined) {
-                    submissionCollector.stop("battle_finished");
+                    submissionCollector.stop('battle_finished');
                 }
             });
 
-            submissionCollector.on("end", async (_, reason) => {
+            submissionCollector.on('end', async (_, reason) => {
                 await setFavouriteSongsArray(baidOne, client.playerFavouriteSongs.get(baidOne)!);
                 await setFavouriteSongsArray(baidTwo, client.playerFavouriteSongs.get(baidTwo)!);
                 client.playerFavouriteSongs.delete(baidOne);
                 client.playerFavouriteSongs.delete(baidTwo);
                 client.ongoingBattles.delete(userOne.id);
                 client.ongoingBattles.delete(userTwo.id);
-                if (reason === "time") {
+                if (reason === 'time') {
                     client.ongoingBattles.delete(userOne.id);
                     await interaction.editReply({
                         embeds: [{
@@ -304,7 +304,7 @@ module.exports = {
 
             const updateBattleEmbed = async (i: MessageComponentInteraction) => {
                 const accuracyCoefficient = 100 / getNoteCountOfSong(uniqueId, difficulty);
-                const userOnePlayStr = userOnePlay === undefined ? "No score submitted" :
+                const userOnePlayStr = userOnePlay === undefined ? 'No score submitted' :
                     `${crownIdToEmoji(userOnePlay.crown)}${rankIdToEmoji(userOnePlay.score_rank - 2)} ${userOnePlay.score}
                     ${judgeIdToEmoji(0)}${userOnePlay.good_count}
                     ${judgeIdToEmoji(1)}${userOnePlay.ok_count}
@@ -313,7 +313,7 @@ module.exports = {
                     **Max Drumroll:** ${userOnePlay.drumroll_count}
                     **Accuracy:** ${(userOnePlay.good_count * accuracyCoefficient + userOnePlay.ok_count * accuracyCoefficient / 2).toFixed(2)}%
                     `;
-                const userTwoPlayStr = userTwoPlay === undefined ? "No score submitted" :
+                const userTwoPlayStr = userTwoPlay === undefined ? 'No score submitted' :
                     `${crownIdToEmoji(userTwoPlay.crown)}${rankIdToEmoji(userTwoPlay.score_rank - 2)} ${userTwoPlay.score}
                     ${judgeIdToEmoji(0)}${userTwoPlay.good_count}
                     ${judgeIdToEmoji(1)}${userTwoPlay.ok_count}
@@ -335,7 +335,7 @@ module.exports = {
                         description += `### Draw!`;
                     }
                 } else {
-                    description += "### Match Ongoing";
+                    description += '### Match Ongoing';
                 }
                 await i.update({
                     embeds: [{

@@ -1,4 +1,4 @@
-﻿import {db} from "../index";
+﻿import {db} from '@database/index.js';
 
 export async function addBattle(uniqueId: number, baidOne: number, baidTwo: number, winner: number) {
     await db.insertInto('battle')

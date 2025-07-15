@@ -1,24 +1,24 @@
-﻿import {ChatInputCommandInteraction, SlashCommandBuilder} from "discord.js";
+﻿import {ChatInputCommandInteraction, SlashCommandBuilder} from 'discord.js';
 import {
     isUserBoostingServer,
     replyWithErrorMessage,
     returnSongAutocomplete as autocomplete,
     validateSongInput
-} from "../../utils/discord";
-import {getBaidFromDiscordId} from "../../database/queries/userDiscord";
-import {getFavouriteSongsArray, setFavouriteSongsArray} from "../../database/queries/userData";
-import {getSongTitle} from "../../utils/datatable";
-import {EMBED_COLOUR} from "../../constants/discord";
+} from '@utils/discord.js';
+import {getBaidFromDiscordId} from '@database/queries/userDiscord.js';
+import {getFavouriteSongsArray, setFavouriteSongsArray} from '@database/queries/userData.js';
+import {getSongTitle} from '@utils/datatable.js';
+import {EMBED_COLOUR} from '@constants/discord.js';
 
-const COMMAND_NAME = "Favourite"
+const COMMAND_NAME = 'Favourite';
 
 module.exports = {
     data: new SlashCommandBuilder()
-        .setName("favourite")
-        .setDescription("Add/Remove Songs to Favourite Songs")
+        .setName('favourite')
+        .setDescription('Add/Remove Songs to Favourite Songs')
         .addStringOption(option =>
-            option.setName("song")
-                .setDescription("Song name")
+            option.setName('song')
+                .setDescription('Song name')
                 .setRequired(true)
                 .setAutocomplete(true))
     ,
@@ -26,19 +26,19 @@ module.exports = {
     autocomplete
     ,
     async execute(interaction: ChatInputCommandInteraction) {
-        const songOption = interaction.options.getString("song")!
+        const songOption = interaction.options.getString('song')!;
         if (!isUserBoostingServer(interaction.user.id)) {
-            await replyWithErrorMessage(interaction, COMMAND_NAME, "You need to be a server booster to use this command!");
+            await replyWithErrorMessage(interaction, COMMAND_NAME, 'You need to be a server booster to use this command!');
             return;
         }
         const baid = await getBaidFromDiscordId(interaction.user.id);
         if (baid === undefined) {
-            await replyWithErrorMessage(interaction, COMMAND_NAME, "You have not linked your discord account to your card yet!");
+            await replyWithErrorMessage(interaction, COMMAND_NAME, 'You have not linked your discord account to your card yet!');
             return;
         }
         const songValidationResult = await validateSongInput(interaction, songOption, COMMAND_NAME);
         if (songValidationResult === undefined) return;
-        const uniqueId = songValidationResult.uniqueId
+        const uniqueId = songValidationResult.uniqueId;
         const lang = songValidationResult.lang;
         let favouriteSongs = (await getFavouriteSongsArray(baid))!;
         const i = favouriteSongs.indexOf(uniqueId);

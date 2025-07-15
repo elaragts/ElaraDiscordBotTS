@@ -1,13 +1,13 @@
-﻿import pino from 'pino';
+﻿import Pino from 'pino';
 
-const logger = pino({
+const logger = Pino.pino({
     transport: {
         target: 'pino-pretty',
         options: {
             colorize: true,
-            ignore: 'pid,hostname',
-        },
-    },
+            ignore: 'pid,hostname'
+        }
+    }
 });
 
 export default logger;

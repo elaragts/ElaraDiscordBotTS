@@ -1,12 +1,16 @@
-﻿import {getChassisIdFromDiscordId, getDiscordIdFromChassisId, setChassisStatus} from "../../../../database/queries/chassis";
-import {replyWithErrorMessage} from "../../../../utils/discord";
-import {ChatInputCommandInteraction} from "discord.js";
-import {EMBED_COLOUR} from "../../../../constants/discord";
+﻿import {
+    getChassisIdFromDiscordId,
+    getDiscordIdFromChassisId,
+    setChassisStatus
+} from '@database/queries/chassis.js';
+import {replyWithErrorMessage} from '@utils/discord.js';
+import {ChatInputCommandInteraction} from 'discord.js';
+import {EMBED_COLOUR} from '@constants/discord.js';
 
-const COMMAND_NAME = "Enable ChassisID"
+const COMMAND_NAME = 'Enable ChassisID';
 
 
-export async function execute(interaction: ChatInputCommandInteraction)  {
+export async function execute(interaction: ChatInputCommandInteraction) {
     let discordId, chassisId;
     const userOption = interaction.options.getUser('user');
     const chassisIdOption = interaction.options.getNumber('chassisid');

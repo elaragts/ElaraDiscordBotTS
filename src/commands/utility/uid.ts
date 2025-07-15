@@ -1,42 +1,42 @@
-﻿import {SlashCommandBuilder, MessageFlags, ChatInputCommandInteraction} from "discord.js";
-import {replyWithErrorMessage, returnSongAutocomplete as autocomplete, validateSongInput} from "../../utils/discord";
-import {getSongInfo} from "../../utils/datatable";
-import {EMBED_COLOUR} from "../../constants/discord";
-import {Language} from "../../constants/datatable";
+﻿import {SlashCommandBuilder, MessageFlags, ChatInputCommandInteraction} from 'discord.js';
+import {replyWithErrorMessage, returnSongAutocomplete as autocomplete, validateSongInput} from '@utils/discord.js';
+import {getSongInfo} from '@utils/datatable.js';
+import {EMBED_COLOUR} from '@constants/discord.js';
+import {Language} from '@constants/datatable.js';
 
 
-const COMMAND_NAME = "ID"
+const COMMAND_NAME = 'ID';
 
 module.exports = {
     data: new SlashCommandBuilder()
-        .setName("uid")
-        .setDescription("Get Song Id/Song from Id")
+        .setName('uid')
+        .setDescription('Get Song Id/Song from Id')
         .addStringOption(option =>
-            option.setName("song")
-                .setDescription("Song name")
+            option.setName('song')
+                .setDescription('Song name')
                 .setRequired(false)
                 .setAutocomplete(true))
         .addIntegerOption(option =>
-            option.setName("id")
-                .setDescription("Song UniqueId")
+            option.setName('id')
+                .setDescription('Song UniqueId')
                 .setRequired(false)
                 .setMinValue(0)
         )
     ,
     async execute(interaction: ChatInputCommandInteraction) {
-        const songInput = interaction.options.getString("song");
-        const idInput = interaction.options.getInteger("id");
+        const songInput = interaction.options.getString('song');
+        const idInput = interaction.options.getInteger('id');
         let uniqueId;
         let lang = Language.JAPANESE;
         if (songInput !== null) {
             const songValidationResult = await validateSongInput(interaction, songInput, COMMAND_NAME);
             if (songValidationResult === undefined) return;
-            uniqueId = songValidationResult.uniqueId
+            uniqueId = songValidationResult.uniqueId;
             lang = songValidationResult.lang;
         } else if (idInput !== null) {
             uniqueId = idInput;
         } else {
-            await replyWithErrorMessage(interaction, COMMAND_NAME, "曲名かUIDを入力してください");
+            await replyWithErrorMessage(interaction, COMMAND_NAME, '曲名かUIDを入力してください');
             return;
         }
         const songInfo = getSongInfo(uniqueId);

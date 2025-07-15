@@ -3,13 +3,14 @@
     getChassisIdFromDiscordId,
     getDiscordIdFromChassisId,
     setChassisStatus
-} from "../../../../database/queries/chassis";
-import {replyWithErrorMessage} from "../../../../utils/discord";
-import {ActionRowBuilder, ButtonBuilder, ButtonStyle, ChatInputCommandInteraction, MessageFlags} from "discord.js";
-import {EMBED_COLOUR} from "../../../../constants/discord";
+} from '@database/queries/chassis.js';
+import {replyWithErrorMessage} from '@utils/discord.js';
+import {ActionRowBuilder, ButtonBuilder, ButtonStyle, ChatInputCommandInteraction, MessageFlags} from 'discord.js';
+import {EMBED_COLOUR} from '@constants/discord.js';
 
-const COMMAND_NAME = "Delete ChassisID"
-export async function execute(interaction: ChatInputCommandInteraction)  {
+const COMMAND_NAME = 'Delete ChassisID';
+
+export async function execute(interaction: ChatInputCommandInteraction) {
     let discordId, chassisId;
     const userOption = interaction.options.getUser('user');
     const chassisIdOption = interaction.options.getNumber('chassisid');
@@ -56,11 +57,14 @@ export async function execute(interaction: ChatInputCommandInteraction)  {
 
     responseCollector.on('collect', async i => {
         if (i.user.id !== interaction.user.id) {
-            await i.reply({content: "Only the initiator can interact with this message", flags: MessageFlags.Ephemeral});
+            await i.reply({
+                content: 'Only the initiator can interact with this message',
+                flags: MessageFlags.Ephemeral
+            });
             return;
         }
         if (i.customId === 'confirm') {
-            const result = await deleteChassisById(chassisId)
+            const result = await deleteChassisById(chassisId);
             if (result > 0) {
                 await interaction.editReply({
                     embeds: [{

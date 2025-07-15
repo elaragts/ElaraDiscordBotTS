@@ -1,8 +1,8 @@
-import {client} from "./bot/client";
-import dotenv from "dotenv";
-import {registerHandlers} from "./bot/handlers";
-import {validateConfig} from "./utils/config";
-import {initializeDatatable} from "./utils/datatable";
+import {client} from '@bot/client.js';
+import dotenv from 'dotenv';
+import {registerHandlers} from '@bot/handlers.js';
+import {validateConfig} from '@utils/config.js';
+import {initializeDatatable} from '@utils/datatable.js';
 
 dotenv.config();
 validateConfig();

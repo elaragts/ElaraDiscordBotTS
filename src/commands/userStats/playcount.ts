@@ -1,17 +1,17 @@
-﻿import {SlashCommandBuilder, ChatInputCommandInteraction} from "discord.js";
-import {getBaidFromDiscordId} from "../../database/queries/userDiscord";
-import {editReplyWithErrorMessage, replyWithErrorMessage} from "../../utils/discord";
-import {getMyDonName} from "../../database/queries/userData";
-import {getMonthlyPlayCount} from "../../database/queries/songPlayBestData";
-import { format, parse, addMonths, isBefore } from 'date-fns';
-import {MonthlyPlayCount} from "../../models/queries";
-import {EMBED_COLOUR} from "../../constants/discord";
+﻿import {SlashCommandBuilder, ChatInputCommandInteraction} from 'discord.js';
+import {getBaidFromDiscordId} from '@database/queries/userDiscord.js';
+import {editReplyWithErrorMessage, replyWithErrorMessage} from '@utils/discord.js';
+import {getMyDonName} from '@database/queries/userData.js';
+import {getMonthlyPlayCount} from '@database/queries/songPlayBestData.js';
+import {format, parse, addMonths, isBefore} from 'date-fns';
+import {MonthlyPlayCount} from '@models/queries.js';
+import {EMBED_COLOUR} from '@constants/discord.js';
 
-const COMMAND_NAME = "Play Count"
+const COMMAND_NAME = 'Play Count';
 
 module.exports = {
     data: new SlashCommandBuilder()
-        .setName("playcount")
+        .setName('playcount')
         .setDescription('Play Count')
         .addUserOption(option =>
             option.setName('user')
@@ -100,7 +100,7 @@ module.exports = {
                                 weight: 'bold',
                                 size: 15
                             },
-                            formatter: function (value: any, context: any) {
+                            formatter: function (value: any, _: any) {
                                 return value.toLocaleString();  // Formats numbers with commas, or use simply `value`
                             }
                         },
@@ -131,7 +131,7 @@ module.exports = {
         if (!response.ok) {
             await editReplyWithErrorMessage(interaction, COMMAND_NAME, 'Graphing API responded with error');
         }
-        const imageURL = (await response.json()).url
+        const imageURL = (await response.json()).url;
         //construct embed
         const returnEmbed = {
             color: EMBED_COLOUR,

@@ -4,8 +4,8 @@
     ChatInputCommandInteraction,
     SlashCommandBuilder,
     AutocompleteInteraction, MessageFlags
-} from "discord.js";
-import {ERROR_COLOUR} from "../constants/discord";
+} from 'discord.js';
+import {ERROR_COLOUR} from '@constants/discord.js';
 
 export interface Command {
     data: SlashCommandBuilder;
@@ -29,11 +29,13 @@ export const chatInputCommandInteractionExtensions = {
                 name: author
             }
         };
-        await this.reply({ embeds: [errorEmbed], flags: MessageFlags.Ephemeral });
+        await this.reply({embeds: [errorEmbed], flags: MessageFlags.Ephemeral});
     }
-}
+};
 
-export type ChatInputCommandInteractionExtended = ChatInputCommandInteraction & typeof chatInputCommandInteractionExtensions
+export type ChatInputCommandInteractionExtended =
+    ChatInputCommandInteraction
+    & typeof chatInputCommandInteractionExtensions
 
 export type SongValidationResult = {
     uniqueId: number;

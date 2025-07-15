@@ -1,10 +1,10 @@
-﻿import {SlashCommandBuilder, MessageFlags, ChatInputCommandInteraction} from "discord.js";
-import {guildId, botChannelId} from "../../../config.json";
-import {generateAndRegisterChassis, getChassisIdFromDiscordId} from "../../database/queries/chassis";
-import {replyWithErrorMessage} from "../../utils/discord";
-import {EMBED_COLOUR} from "../../constants/discord";
+﻿import {SlashCommandBuilder, MessageFlags, ChatInputCommandInteraction} from 'discord.js';
+import config from "#config" with { type: "json" };
+import {generateAndRegisterChassis, getChassisIdFromDiscordId} from '@database/queries/chassis.js';
+import {replyWithErrorMessage} from '@utils/discord.js';
+import {EMBED_COLOUR} from '@constants/discord.js';
 
-const COMMAND_NAME = "ChassisID"
+const COMMAND_NAME = 'ChassisID';
 
 module.exports = {
     data: new SlashCommandBuilder()
@@ -27,14 +27,14 @@ module.exports = {
         const existingChassisId = await getChassisIdFromDiscordId(user.id);
         if (interaction.options.getSubcommand() === 'request') {
             if (existingChassisId !== undefined) {
-                return await replyWithErrorMessage(interaction, COMMAND_NAME, `You already have a chassisId: \`${existingChassisId}\``)
+                return await replyWithErrorMessage(interaction, COMMAND_NAME, `You already have a chassisId: \`${existingChassisId}\``);
             }
-            if (interaction.guildId !== guildId || interaction.channelId !== botChannelId) {
-                const link = `https://discord.com/channels/${guildId}/${botChannelId}`
+            if (interaction.guildId !== config.guildId || interaction.channelId !== config.botChannelId) {
+                const link = `https://discord.com/channels/${config.guildId}/${config.botChannelId}`;
                 await replyWithErrorMessage(interaction, COMMAND_NAME, `Command must be used in ${link}`);
                 return;
             }
-            const newChassisId = await generateAndRegisterChassis(user.id)
+            const newChassisId = await generateAndRegisterChassis(user.id);
             await interaction.reply({
                 embeds: [{
                     title: 'Successfully registered ChassisID',

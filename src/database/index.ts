@@ -1,6 +1,6 @@
-﻿import { Kysely, PostgresDialect } from 'kysely';
-import { Pool, types } from 'pg';
-import type { DB } from '../models/taiko.d.ts';
+﻿import {Kysely, PostgresDialect} from 'kysely';
+import {Pool, types} from 'pg';
+import type {DB} from '@models/taiko.d.js';
 
 
 export const db = new Kysely<DB>({

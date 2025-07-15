@@ -1,13 +1,13 @@
-﻿import {db} from "../index";
-import {CostumeData, UserProfile} from "../../models/queries";
-import {sql} from "kysely";
-import {QueryResult} from "pg";
+﻿import {db} from '@database/index.js';
+import {CostumeData, UserProfile} from '@models/queries.js';
+import {sql} from 'kysely';
+import {QueryResult} from 'pg';
 
 export async function getFavouriteSongsArray(baid: number): Promise<number[] | undefined> {
     const row = await db
-        .selectFrom("user_data")
-        .select(["favorite_songs_array"])
-        .where("baid", "=", baid)
+        .selectFrom('user_data')
+        .select(['favorite_songs_array'])
+        .where('baid', '=', baid)
         .executeTakeFirst();
 
     return row?.favorite_songs_array;
@@ -15,25 +15,25 @@ export async function getFavouriteSongsArray(baid: number): Promise<number[] | u
 
 export async function setFavouriteSongsArray(baid: number, songArray: number[]): Promise<void> {
     await db
-        .updateTable("user_data")
-        .set({"favorite_songs_array": songArray})
-        .where("baid", "=", baid)
+        .updateTable('user_data')
+        .set({'favorite_songs_array': songArray})
+        .where('baid', '=', baid)
         .executeTakeFirst();
 }
 
 export async function getCostume(baid: number): Promise<CostumeData | undefined> {
     return await db
-        .selectFrom("user_data")
+        .selectFrom('user_data')
         .select([
-            "current_body",
-            "current_face",
-            "current_head",
-            "current_kigurumi",
-            "current_puchi",
-            "color_body",
-            "color_face",
+            'current_body',
+            'current_face',
+            'current_head',
+            'current_kigurumi',
+            'current_puchi',
+            'color_body',
+            'color_face',
         ])
-        .where("baid", "=", baid)
+        .where('baid', '=', baid)
         .executeTakeFirst();
 }
 
@@ -133,9 +133,9 @@ export async function getUserProfile(baid: number): Promise<UserProfile | undefi
 
 export async function getMyDonName(baid: number): Promise<string | undefined> {
     const row = await db
-        .selectFrom("user_data")
-        .select(["my_don_name"])
-        .where("baid", "=", baid)
+        .selectFrom('user_data')
+        .select(['my_don_name'])
+        .where('baid', '=', baid)
         .executeTakeFirst();
 
     return row?.my_don_name;
@@ -144,9 +144,9 @@ export async function getMyDonName(baid: number): Promise<string | undefined> {
 
 export async function doesBaidExist(baid: number): Promise<boolean> {
     const result = await db
-        .selectFrom("user_data")
-        .select("baid")
-        .where("baid", "=", baid)
+        .selectFrom('user_data')
+        .select('baid')
+        .where('baid', '=', baid)
         .executeTakeFirst();
 
     return result !== undefined;

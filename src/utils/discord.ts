@@ -1,21 +1,21 @@
-﻿import {AutocompleteInteraction, ChatInputCommandInteraction, Client, MessageFlags} from "discord.js";
-import {doesUniqueIdExist, isValidLang, searchSong, searchSongSync} from "./datatable";
-import logger from "./logger";
-import {songResultSeparator} from "../constants/datatable";
-import {client} from "../bot/client";
-import {guildId, adminRoleId, serverBoostRoleId} from "../../config.json"
+﻿import {AutocompleteInteraction, ChatInputCommandInteraction, Client, MessageFlags} from 'discord.js';
+import {doesUniqueIdExist, isValidLang, searchSong, searchSongSync} from '@utils/datatable.js';
+import logger from '@utils/logger.js';
+import {songResultSeparator} from '@constants/datatable.js';
+import {client} from '@bot/client.js';
+import config from '#config' with {type: 'json'};
 import {
     ChatInputCommandInteractionExtended, chatInputCommandInteractionExtensions,
     ClientExtended,
     SearchSongResult,
     SongValidationResult
-} from "../models/discord";
-import {ERROR_COLOUR} from "../constants/discord";
+} from '@models/discord.js';
+import {ERROR_COLOUR} from '@constants/discord.js';
 
 export const getExtendedClient = (client: Client): ClientExtended => client as ClientExtended;
 
 export function getExtendedChatInputCommandInteraction(interaction: ChatInputCommandInteraction): ChatInputCommandInteractionExtended {
-    return Object.assign(interaction, chatInputCommandInteractionExtensions)
+    return Object.assign(interaction, chatInputCommandInteractionExtensions);
 }
 
 export async function replyWithErrorMessage(interaction: ChatInputCommandInteraction, author: string, reason: string): Promise<void> {
@@ -89,7 +89,7 @@ export async function validateSongInput(interaction: ChatInputCommandInteraction
             return undefined;
         }
         try {
-            uniqueId = parseInt(uniqueIdStr)
+            uniqueId = parseInt(uniqueIdStr);
         } catch (err) {
             await replyWithErrorMessage(interaction, commandName, 'Bad input: invalid uniqueID');
             return undefined;
@@ -113,10 +113,10 @@ export async function validateSongInput(interaction: ChatInputCommandInteraction
 }
 
 export function isUserBoostingServer(userId: string): boolean {
-    const guild = client.guilds.cache.get(guildId)!;
+    const guild = client.guilds.cache.get(config.guildId)!;
     const member = guild.members.cache.get(userId);
     if (member) {
-        return member.roles.cache.has(serverBoostRoleId) || member.roles.cache.has(adminRoleId);
+        return member.roles.cache.has(config.serverBoostRoleId) || member.roles.cache.has(config.adminRoleId);
     }
     return false;
 }
