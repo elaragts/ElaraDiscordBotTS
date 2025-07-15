@@ -1,6 +1,6 @@
 ﻿import {db} from '@database/index.js';
-import {PgError} from '@models/errors.js';
-import {UserChassisChassisListItem, UserChassisUserListItem} from '@models/queries.js';
+import type {PgError} from '@models/errors.js';
+import type {UserChassisChassisListItem, UserChassisUserListItem} from '@models/queries.js';
 
 export async function getChassisIdFromDiscordId(discordId: string): Promise<number | undefined> {
     const row = await db

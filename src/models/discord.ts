@@ -2,14 +2,16 @@
     Client,
     Collection,
     ChatInputCommandInteraction,
-    SlashCommandBuilder,
-    AutocompleteInteraction, MessageFlags
+    AutocompleteInteraction,
+    MessageFlags,
+    SlashCommandOptionsOnlyBuilder,
+    SlashCommandSubcommandsOnlyBuilder
 } from 'discord.js';
 import {ERROR_COLOUR} from '@constants/discord.js';
 
 export interface Command {
-    data: SlashCommandBuilder;
-    execute: (interaction: ChatInputCommandInteraction) => Promise<void>;
+    data: SlashCommandOptionsOnlyBuilder | SlashCommandSubcommandsOnlyBuilder;
+    execute: (interaction: ChatInputCommandInteractionExtended) => Promise<void>;
     autocomplete?: (interaction: AutocompleteInteraction) => Promise<void>;
 }
 

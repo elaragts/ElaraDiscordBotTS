@@ -1,22 +1,31 @@
 ﻿import {REST, Routes} from 'discord.js';
 import config from '#config' with {type: 'json'};
-import {data as adminCommand} from '../commands/utility/admin/index.js';
+import {command as adminCommand} from '../commands/utility/admin/index.js';
 import fs from 'node:fs';
 import path from 'node:path';
+import {fileURLToPath} from 'node:url';
 import dotenv from 'dotenv';
+import {Command} from '@models/discord.js';
 
+// ESM-compatible __dirname
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+// Load .env
 dotenv.config({path: path.join(__dirname, '..', '..', '.env')});
 
 const commands = [];
-// Grab all the command folders from the commands directory you created earlier
+
+// Read command folders
 const foldersPath = path.join(__dirname, '..', 'commands');
 const commandFolders = fs.readdirSync(foldersPath);
 
 for (const folder of commandFolders) {
-    // Grab all the command files from the commands directory you created earlier
     const commandsPath = path.join(foldersPath, folder);
-    const commandFiles = fs.readdirSync(commandsPath).filter(file => file.endsWith('.js') || file.endsWith('.ts'));
-    // Grab the SlashCommandBuilder#toJSON() output of each command's data for deployment
+    const commandFiles = fs
+        .readdirSync(commandsPath)
+        .filter(file => file.endsWith('.js') || file.endsWith('.ts'));
+
     for (const file of commandFiles) {
         const filePath = path.join(commandsPath, file);
 
@@ -25,38 +34,41 @@ for (const folder of commandFolders) {
             continue;
         }
 
-        const command = require(filePath);
-        if ('data' in command && 'execute' in command) {
+        // Dynamically import ESM module
+        const module = await import(filePath);
+        const command: Command = module.command;
+
+        if (command) {
             commands.push(command.data.toJSON());
         } else {
             console.log(`[WARNING] The command at ${filePath} is missing a required "data" or "execute" property.`);
         }
     }
-
 }
-if (process.env.BOT_TOKEN === undefined || process.env.CLIENT_ID === undefined) {
+
+if (!process.env.BOT_TOKEN || !process.env.CLIENT_ID) {
     throw new Error('BOT_TOKEN & CLIENT_ID environment variables required');
 }
 
-// Construct and prepare an instance of the REST module
+// Construct REST client
 const rest = new REST().setToken(process.env.BOT_TOKEN);
 
-// and deploy your commands!
-(async () => {
-    try {
-        console.log(`Started refreshing ${commands.length} application (/) commands.`);
+try {
+    console.log(`Started refreshing ${commands.length} application (/) commands.`);
 
-        // The put method is used to fully refresh all commands in the guild with the current set
-        const data: any = await rest.put(Routes.applicationCommands(process.env.CLIENT_ID!), {body: commands});
-        const data2: any = await rest.put(
-            Routes.applicationGuildCommands(process.env.CLIENT_ID!, config.guildId),
-            {body: config.deployment === 'production' ? [adminCommand] : commands},
-        );
+    await rest.put(
+        Routes.applicationCommands(process.env.CLIENT_ID),
+        {body: commands}
+    );
 
-        console.log(`Successfully reloaded ${data.length} application (/) commands.`);
+    await rest.put(
+        Routes.applicationGuildCommands(process.env.CLIENT_ID, config.guildId),
+        {
+            body: config.deployment === 'production' ? [adminCommand.data] : commands
+        }
+    );
 
-    } catch (error) {
-        // And of course, make sure you catch and log any errors!
-        console.error(error);
-    }
-})();
+    console.log(`Successfully reloaded ${commands.length} application (/) commands.`);
+} catch (error) {
+    console.error(error);
+}

@@ -1,5 +1,5 @@
 ﻿import {db} from '@database/index.js';
-import {LeaderboardEntry, MonthlyPlayCount, SongPlay} from '@models/queries.js';
+import type {LeaderboardEntry, MonthlyPlayCount, SongPlay} from '@models/queries.js';
 import {sql} from 'kysely';
 import {Difficulty} from '@constants/datatable.js';
 

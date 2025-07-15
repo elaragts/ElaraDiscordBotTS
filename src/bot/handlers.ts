@@ -1,7 +1,7 @@
 ﻿import {AutocompleteInteraction, ChatInputCommandInteraction, Collection, Events, MessageFlags} from 'discord.js';
 import {Command, ClientExtended} from '@models/discord.js';
 import path from 'node:path';
-import fs from 'node:fs';
+import { readdir } from "fs/promises";
 import logger from '@utils/logger.js';
 import {getExtendedClient, getExtendedChatInputCommandInteraction, safeGetSubcommand} from '@utils/discord.js';
 import {fileURLToPath} from 'url';
@@ -9,8 +9,7 @@ import {fileURLToPath} from 'url';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-export function registerHandlers(client: ClientExtended) {
-
+export async function registerHandlers(client: ClientExtended) {
     client.once(Events.ClientReady, readyClient => {
         logger.info(`Ready! Logged in as ${readyClient.user.tag}`);
     });
@@ -25,23 +24,28 @@ export function registerHandlers(client: ClientExtended) {
     });
 
     client.commands = new Collection();
-    const foldersPath = path.join(__dirname, '..', 'commands');
-    const commandFolders = fs.readdirSync(foldersPath);
+    const foldersPath = path.join(__dirname, "..", "commands");
+    const commandFolders = await readdir(foldersPath);
 
     for (const folder of commandFolders) {
         const commandsPath = path.join(foldersPath, folder);
-        const commandFiles = fs.readdirSync(commandsPath).filter(file => file.endsWith('.ts') || file.endsWith('.js'));
+        const commandFiles = (await readdir(commandsPath)).filter(file => file.endsWith(".ts") || file.endsWith(".js"));
+
         for (const file of commandFiles) {
             const filePath = path.join(commandsPath, file);
-            const command: Command = require(filePath);
-            if ('data' in command && 'execute' in command) {
+            const module = await import(filePath);
+            const command: Command = module.command;
+
+            if (command) {
                 client.commands.set(command.data.name, command);
             } else {
                 logger.warn(`The command at ${filePath} is missing a required "data" or "execute" property.`);
             }
         }
-        client.commands.set('admin', require('../commands/utility/admin'));
     }
+
+    const adminModule = await import("../commands/utility/admin/index.js");
+    client.commands.set("admin", adminModule.command);
 }
 
 

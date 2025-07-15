@@ -1,4 +1,4 @@
-﻿import {SlashCommandBuilder, InteractionContextType, ChatInputCommandInteraction} from 'discord.js';
+﻿import {SlashCommandBuilder, InteractionContextType} from 'discord.js';
 
 import {replyWithErrorMessage} from '@utils/discord.js';
 import config from "#config" with { type: "json" };
@@ -8,8 +8,9 @@ import {execute as chassisEnable} from './chassis/enable.js';
 import {execute as chassisDisable} from './chassis/disable.js';
 import {execute as chassisDelete} from './chassis/delete.js';
 import {execute as chassisList} from './chassis/list.js';
+import {ChatInputCommandInteractionExtended, Command} from '@models/discord.js';
 
-export const data = new SlashCommandBuilder()
+const data = new SlashCommandBuilder()
     .setName('admin')
     .setDescription('Admin commands')
     .setDefaultMemberPermissions(0) //admin only
@@ -129,7 +130,7 @@ export const data = new SlashCommandBuilder()
                 )
     );
 
-export async function execute(interaction: ChatInputCommandInteraction) {
+async function execute(interaction: ChatInputCommandInteractionExtended) {
     if (!config.whitelistedAdmins.includes(interaction.user.id)) {
         await replyWithErrorMessage(interaction, 'Admin', 'You are not a whitelisted admin!');
         return;
@@ -153,4 +154,9 @@ export async function execute(interaction: ChatInputCommandInteraction) {
         }
             break;
     }
+}
+
+export const command: Command = {
+    data,
+    execute
 }

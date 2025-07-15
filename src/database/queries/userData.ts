@@ -1,7 +1,7 @@
 ﻿import {db} from '@database/index.js';
-import {CostumeData, UserProfile} from '@models/queries.js';
+import type {CostumeData, UserProfile} from '@models/queries.js';
 import {sql} from 'kysely';
-import {QueryResult} from 'pg';
+import type {QueryResult} from 'pg';
 
 export async function getFavouriteSongsArray(baid: number): Promise<number[] | undefined> {
     const row = await db
