@@ -71,3 +71,14 @@ export type UserChassisChassisListItem = {
     discord_id: string | null;
     last_used: Date;
 }
+
+export type BattleStats = {
+    total_battles: number;
+    battles_won: number;
+}
+
+export type BattleLog = {
+    opponent_baid: number;
+    winner_baid: number;
+    battle_at: Date;
+}

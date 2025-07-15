@@ -7,6 +7,7 @@ import {replyWithErrorMessage} from '@utils/discord.js';
 import {ChatInputCommandInteraction, APIEmbed} from 'discord.js';
 import {doesBaidExist, getMyDonName} from '@database/queries/userData.js';
 import {EMBED_COLOUR} from '@constants/discord.js';
+import {PAGE_LIMIT} from '@constants/common.js';
 
 const COMMAND_NAME = 'List ChassisID';
 
@@ -23,7 +24,8 @@ export async function execute(interaction: ChatInputCommandInteraction) {
             return replyWithErrorMessage(interaction, COMMAND_NAME, `baid ${baid} does not exist`);
         }
         const myDonName = (await getMyDonName(baid))!;
-        const result = await getUserUsedChassisList(baid, (page - 1) * 10);
+        const offset = (page - 1) * PAGE_LIMIT;
+        const result = await getUserUsedChassisList(baid, offset);
         let desc = result.length > 0 ? '' : 'No results found';
         for (let i in result) {
             desc += `${i + 1}. \`${result[i].chassis_id}\` - Assigned to: <@${result[i].discord_id}> - Last used: ${result[i].last_used.toDateString()}\n`;
@@ -52,7 +54,8 @@ export async function execute(interaction: ChatInputCommandInteraction) {
         } else {
             return await replyWithErrorMessage(interaction, COMMAND_NAME, 'ChassisID or user option required');
         }
-        const result = await getUserChassisList(chassisId, (page - 1) * 10);
+        const offset = (page - 1) * PAGE_LIMIT;
+        const result = await getUserChassisList(chassisId, offset);
         let desc = result.length > 0 ? '' : 'No results found';
         for (let i in result) {
             desc += `${i + 1}. baid: \`${result[i].baid}\` (${result[i].my_don_name}) - ${result[i].discord_id ? `<@${result[i].discord_id}> - ` : ''}Last used: ${result[i].last_used.toDateString()}\n`;

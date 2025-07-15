@@ -8,6 +8,7 @@ import {createCostumeAvatar} from '@utils/costume.js';
 import {CostumeData} from '@models/queries.js';
 import {EMBED_COLOUR} from '@constants/discord.js';
 import {ChatInputCommandInteractionExtended, Command} from '@models/discord.js';
+import {getBattleStats} from '@database/queries/battle.js';
 
 const COMMAND_NAME = 'Profile';
 
@@ -42,6 +43,8 @@ async function execute(interaction: ChatInputCommandInteractionExtended) {
         await replyWithErrorMessage(interaction, COMMAND_NAME, 'Error retrieving profile');
         return;
     }
+
+    const battleStats = await getBattleStats(baid)
     const clearState = daniClearStateToEmoji(profile.clear_state);
     const dani = danIdToName(profile.dan_id);
     let achievementPanelEmoji = '';
@@ -96,11 +99,19 @@ async function execute(interaction: ChatInputCommandInteractionExtended) {
     const avatar = await createCostumeAvatar(costumeData);
     const attachment = new AttachmentBuilder(avatar, {name: 'avatar.png'});
 
+    let description = `Title: ${profile.title}`
+    description += `\nPlay Count: ${profile.play_count}`
+    if (battleStats.total_battles > 0) {
+        description += `\nBattles played: ${battleStats.total_battles}`
+        description += `\nBattles Won: ${battleStats.battles_won}`
+    }
+
+
     //construct embed
     const returnEmbed = {
         title: `${clearState}${dani} ${profile.dan_id ? '|' : ''} ${profile.my_don_name}`,
         color: EMBED_COLOUR,
-        description: `Title: ${profile.title}\nPlay Count: ${profile.play_count}`,
+        description: description,
         thumbnail: {
             url: 'attachment://avatar.png',
         }, author: {

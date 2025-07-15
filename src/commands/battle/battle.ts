@@ -15,8 +15,7 @@ import {crownIdToEmoji, difficultyToEmoji, judgeIdToEmoji, rankIdToEmoji} from '
 import {getLatestUserPlay, getMaxSongPlayDataId} from '@database/queries/songPlayBestData.js';
 import {SongPlay} from '@models/queries.js';
 import {addBattle} from '@database/queries/battle.js';
-import {Difficulty} from '@constants/datatable.js';
-import {EMBED_COLOUR} from '@constants/discord.js';
+import {DIFFICULTY_CHOICES, EMBED_COLOUR} from '@constants/discord.js';
 import type {ChatInputCommandInteractionExtended, Command} from '@models/discord.js';
 
 const COMMAND_NAME = 'Battle';
@@ -32,13 +31,7 @@ const data = new SlashCommandBuilder()
         option.setName('difficulty')
             .setDescription('Difficulty of the map')
             .setRequired(true)
-            .addChoices(
-                {name: 'かんたん/Easy', value: Difficulty.EASY.toString()},
-                {name: 'ふつう/Normal', value: Difficulty.NORMAL.toString()},
-                {name: 'むずかしい/Hard', value: Difficulty.HARD.toString()},
-                {name: 'おに/Oni', value: Difficulty.ONI.toString()},
-                {name: 'おに (裏)/Ura Oni', value: Difficulty.URA.toString()}
-            )
+            .addChoices(DIFFICULTY_CHOICES)
     )
 
 async function execute(interaction: ChatInputCommandInteractionExtended) {

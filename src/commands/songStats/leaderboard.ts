@@ -5,8 +5,9 @@ import {crownIdToEmoji, difficultyToEmoji, rankIdToEmoji} from '@utils/config.js
 import {getDiscordIdFromBaid} from '@database/queries/userDiscord.js';
 import {getSongStars, getSongTitle} from '@utils/datatable.js';
 import {difficultyIdToName} from '@utils/common.js';
-import {EMBED_COLOUR} from '@constants/discord.js';
+import {DIFFICULTY_CHOICES, EMBED_COLOUR} from '@constants/discord.js';
 import {ChatInputCommandInteractionExtended, Command} from '@models/discord.js';
+import {PAGE_LIMIT} from '@constants/common.js';
 
 const COMMAND_NAME = 'Leaderboard';
 
@@ -22,13 +23,7 @@ const data = new SlashCommandBuilder()
         option.setName('difficulty')
             .setDescription('Difficulty of the map')
             .setRequired(true)
-            .addChoices(
-                {name: 'かんたん/Easy', value: '1'},
-                {name: 'ふつう/Normal', value: '2'},
-                {name: 'むずかしい/Hard', value: '3'},
-                {name: 'おに/Oni', value: '4'},
-                {name: 'おに (裏)/Ura Oni', value: '5'}
-            )
+            .addChoices(DIFFICULTY_CHOICES)
     )
     .addIntegerOption(option =>
         option.setName('page')
@@ -47,7 +42,8 @@ async function execute(interaction: ChatInputCommandInteractionExtended) {
     const uniqueId = songValidationResult.uniqueId;
     const lang = songValidationResult.lang;
     //error checking done
-    const leaderboard = await getLeaderboard(uniqueId, difficulty, (page - 1) * 10); //taiko DB query result
+    const offset = (page - 1) * PAGE_LIMIT;
+    const leaderboard = await getLeaderboard(uniqueId, difficulty, offset); //taiko DB query result
     let desc = '';
 
     //iterate over taiko DB return value and create text for the embed ({i}. {player}: :crown:{score})

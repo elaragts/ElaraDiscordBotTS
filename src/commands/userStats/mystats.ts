@@ -11,7 +11,7 @@ import {difficultyIdToName} from '@utils/common.js';
 import {crownIdToEmoji, difficultyToEmoji, judgeIdToEmoji, rankIdToEmoji} from '@utils/config.js';
 import {getCostume} from '@database/queries/userData.js';
 import {createCostumeAvatar} from '@utils/costume.js';
-import {EMBED_COLOUR} from '@constants/discord.js';
+import {DIFFICULTY_CHOICES, EMBED_COLOUR} from '@constants/discord.js';
 import {ChatInputCommandInteractionExtended, Command} from '@models/discord.js';
 
 const COMMAND_NAME = 'My Stats';
@@ -28,13 +28,7 @@ const data = new SlashCommandBuilder()
         option.setName('difficulty')
             .setDescription('Difficulty of the map')
             .setRequired(true)
-            .addChoices(
-                {name: 'かんたん/Easy', value: '0'},
-                {name: 'ふつう/Normal', value: '1'},
-                {name: 'むずかしい/Hard', value: '2'},
-                {name: 'おに/Oni', value: '3'},
-                {name: 'おに (裏)/Ura Oni', value: '4'}
-            )
+            .addChoices(DIFFICULTY_CHOICES)
     )
     .addUserOption(option =>
         option.setName('user')

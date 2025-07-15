@@ -2,6 +2,7 @@
 import type {LeaderboardEntry, MonthlyPlayCount, SongPlay} from '@models/queries.js';
 import {sql} from 'kysely';
 import {Difficulty} from '@constants/datatable.js';
+import {PAGE_LIMIT} from '@constants/common.js';
 
 export async function getLeaderboard(uniqueId: number, difficulty: number, offset: number): Promise<LeaderboardEntry[]> {
     return await db
@@ -17,7 +18,7 @@ export async function getLeaderboard(uniqueId: number, difficulty: number, offse
         .where('sbd.song_id', '=', uniqueId)
         .where('sbd.difficulty', '=', difficulty)
         .orderBy('sbd.best_score', 'desc')
-        .limit(10)
+        .limit(PAGE_LIMIT)
         .offset(offset)
         .execute();
 }
