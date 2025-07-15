@@ -80,7 +80,7 @@ async function execute(interaction: ChatInputCommandInteractionExtended) {
             if (opponentBaid != latestBattles[i].opponent_baid) {
                 opponentDonName = await getMyDonName(latestBattles[i].opponent_baid)
             }
-            description += `\n${i+1}. ${userDonName} vs ${opponentDonName}: **${latestBattles[i].winner_baid == baid ? '🟢 WON' : '🔴 LOST'}** at <t:${unixSeconds}:f>`
+            description += `\n${(page - 1) * PAGE_LIMIT + parseInt(i) + 1}. ${userDonName} vs ${opponentDonName}: **${latestBattles[i].winner_baid == baid ? '🟢 WON' : '🔴 LOST'}** at <t:${unixSeconds}:f>`
         }
     } else {
         description += '\nNo Battles Found'

@@ -54,7 +54,7 @@ async function execute(interaction: ChatInputCommandInteractionExtended) {
         let discordId = await getDiscordIdFromBaid(leaderboard[i].baid);
         if (discordId === undefined) name = leaderboard[i].my_don_name;
         else name = `<@${discordId}>`;
-        desc += `${(page - 1) * 10 + parseInt(i) + 1}. ${name}: ${crown}${rank}${leaderboard[i].best_score}\n`;
+        desc += `${(page - 1) * PAGE_LIMIT + parseInt(i) + 1}. ${name}: ${crown}${rank}${leaderboard[i].best_score}\n`;
     }
     //no results
     if (leaderboard.length === 0) {
