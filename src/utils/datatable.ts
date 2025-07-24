@@ -82,7 +82,7 @@ function initializeWordlist() {
         if (key.startsWith('song') && !key.startsWith('song_sub') && !key.startsWith('song_detail')) {
             const id = key.slice(5); //remove song_ from id
             const uniqueId = songIdMap.get(id);
-            if (uniqueId === undefined) {
+            if (uniqueId === undefined || songTitles.has(uniqueId)) {
                 continue;
             }
             songTitles.set(uniqueId, [item.japaneseText, item.englishUsText]);
