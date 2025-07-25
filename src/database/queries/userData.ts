@@ -69,15 +69,13 @@ export async function getUserProfile(baid: number): Promise<UserProfile | undefi
             GROUP BY baid
                 )
                     , dan_cte AS (
-            SELECT baid, MAX (dan_id) AS dan_id, clear_state
-            FROM dan_score_data
-            WHERE dan_type = 1
-              AND baid = ${baid}
-              AND clear_state
-                > 0
-            GROUP BY baid, clear_state
-
-                )
+            SELECT baid, dan_id, clear_state
+            FROM (SELECT baid, dan_id, clear_state, ROW_NUMBER() OVER (PARTITION BY baid ORDER BY dan_id DESC) AS rn
+                FROM dan_score_data
+                WHERE dan_type = 1
+                AND baid = ${baid}
+                AND clear_state > 0) t
+            WHERE rn = 1)
             SELECT ud.my_don_name,
                    ud.title,
                    ud.achievement_display_difficulty,
