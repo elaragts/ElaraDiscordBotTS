@@ -58,6 +58,7 @@ export type SongPlay = {
     ok_count: number;
     score: number;
     score_rank: number;
+    accuracy: number;
 }
 
 export type UserChassisUserListItem = {

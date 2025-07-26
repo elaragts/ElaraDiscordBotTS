@@ -123,7 +123,7 @@ export async function getMaxSongPlayDataId(): Promise<number> {
 }
 
 export async function getLatestUserPlay(baid: number, uniqueId: number, difficulty: Difficulty): Promise<SongPlay | undefined> {
-    return await db
+    const result = await db
         .selectFrom('song_play_data')
         .select([
             'id',
@@ -142,5 +142,5 @@ export async function getLatestUserPlay(baid: number, uniqueId: number, difficul
         .orderBy('id', 'desc')
         .executeTakeFirst();
 
-
+    return result ? {...result, accuracy: 0} : undefined
 }

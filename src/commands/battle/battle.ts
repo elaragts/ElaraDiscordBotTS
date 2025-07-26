@@ -1,12 +1,15 @@
 ﻿import {
-    SlashCommandBuilder,
     ActionRowBuilder,
     ButtonBuilder,
     ButtonStyle,
+    InteractionResponse,
     MessageComponentInteraction,
-    User, InteractionResponse, MessageFlags
+    MessageFlags,
+    SlashCommandBuilder,
+    User
 } from 'discord.js';
-import {returnSongAutocomplete as autocomplete, replyWithErrorMessage, validateSongInput} from '@utils/discord.js';
+
+import {replyWithErrorMessage, returnSongAutocomplete as autocomplete, validateSongInput} from '@utils/discord.js';
 import {client} from '@bot/client.js';
 import {getBaidFromDiscordId} from '@database/queries/userDiscord.js';
 import {getFavouriteSongsArray, getMyDonName, setFavouriteSongsArray} from '@database/queries/userData.js';
@@ -15,7 +18,7 @@ import {crownIdToEmoji, difficultyToEmoji, judgeIdToEmoji, rankIdToEmoji} from '
 import {getLatestUserPlay, getMaxSongPlayDataId} from '@database/queries/songPlayBestData.js';
 import {SongPlay} from '@models/queries.js';
 import {addBattle} from '@database/queries/battle.js';
-import {DIFFICULTY_CHOICES, EMBED_COLOUR} from '@constants/discord.js';
+import {BattleWinCondition, DIFFICULTY_CHOICES, EMBED_COLOUR, BattleWinConditionLabel} from '@constants/discord.js';
 import type {ChatInputCommandInteractionExtended, Command} from '@models/discord.js';
 
 const COMMAND_NAME = 'Battle';
@@ -33,6 +36,17 @@ const data = new SlashCommandBuilder()
             .setRequired(true)
             .addChoices(DIFFICULTY_CHOICES)
     )
+    .addStringOption(option =>
+        option.setName('judgement')
+            .setDescription('Judgement condition')
+            .setRequired(false)
+            .setChoices(
+                Object.entries(BattleWinConditionLabel).map(([value, name]) => ({
+                    name,
+                    value
+                }))
+            )
+    );
 
 async function execute(interaction: ChatInputCommandInteractionExtended) {
     const userOne = interaction.user;
@@ -57,8 +71,13 @@ async function execute(interaction: ChatInputCommandInteractionExtended) {
     //execute
     const songInput = interaction.options.getString('song');
     const difficulty = parseInt(interaction.options.getString('difficulty')!);
+    const winCondition = interaction.options.getString('judgement') as BattleWinCondition || BattleWinCondition.SCORE;
+    const invertWinConditionLogic = winCondition === BattleWinCondition.OK_COUNT || winCondition === BattleWinCondition.MISS_COUNT;
+
+    const judgementLine = `###Judgement: ${BattleWinConditionLabel[winCondition]}`
+    let winner = -1;
     const baid = await getBaidFromDiscordId(interaction.user.id);
-    const winCondition = 'score';
+
     if (baid === undefined) {
         await replyWithErrorMessage(interaction, COMMAND_NAME, 'You have not linked your discord account to your card yet!');
         return;
@@ -69,8 +88,11 @@ async function execute(interaction: ChatInputCommandInteractionExtended) {
     if (songValidationResult === undefined) return;
     const uniqueId = songValidationResult.uniqueId;
     const lang = songValidationResult.lang;
+    const songStars = getSongStars(uniqueId, difficulty);
+    const accuracyCoefficient = 100 / getNoteCountOfSong(uniqueId, difficulty);
 
-    if (getSongStars(uniqueId, difficulty) === 0) {
+
+    if (songStars) {
         await replyWithErrorMessage(interaction, COMMAND_NAME, 'This song does not have a chart for this difficulty');
         return;
     }
@@ -82,7 +104,7 @@ async function execute(interaction: ChatInputCommandInteractionExtended) {
         author: {
             name: COMMAND_NAME
         },
-        description: `## ${songName} ${difficultyToEmoji(difficulty)}★${getSongStars(uniqueId, difficulty)}`,
+        description: `## ${songName} ${difficultyToEmoji(difficulty)}★${songStars}\n${judgementLine}\n`,
     };
     let joinResponse;
     joinResponse = await interaction.reply({
@@ -164,7 +186,7 @@ async function execute(interaction: ChatInputCommandInteractionExtended) {
                 author: {
                     name: COMMAND_NAME
                 },
-                description: `## ${songName} ${difficultyToEmoji(difficulty)}★${getSongStars(uniqueId, difficulty)}\n### ${nameTwo} has joined the battle!`,
+                description: `## ${songName} ${difficultyToEmoji(difficulty)}★${songStars}\n${judgementLine}\n### ${nameTwo} has joined the battle!`,
             }], components: [confirmRow.toJSON()]
         });
         const confirmCollector = joinResponse.createMessageComponentCollector({
@@ -228,7 +250,7 @@ async function execute(interaction: ChatInputCommandInteractionExtended) {
                 author: {
                     name: COMMAND_NAME
                 },
-                description: `## ${songName} ${difficultyToEmoji(difficulty)}★${getSongStars(uniqueId, difficulty)}\n### Instructions:\n1. set number of games to \`1\` in the service menu\n2. go to Liked Songs and find \`${songName}\`\n3. press submit button once you finish playing (and go back to attract screen)`,
+                description: `## ${songName} ${difficultyToEmoji(difficulty)}★${songStars}\n${judgementLine}\n### Instructions:\n1. set number of games to \`1\` in the service menu\n2. go to Liked Songs and find \`${songName}\`\n3. press submit button once you finish playing (and go back to attract screen)`,
             }], components: [submitRow.toJSON()]
         });
 
@@ -249,6 +271,7 @@ async function execute(interaction: ChatInputCommandInteractionExtended) {
                 await i.reply({content: 'No score submitted', flags: MessageFlags.Ephemeral});
                 return;
             }
+            songPlay.accuracy = songPlay.good_count * accuracyCoefficient + songPlay.ok_count * accuracyCoefficient / 2;
             if (i.user.id === userOne.id) {
                 userOnePlay = songPlay;
             } else {
@@ -282,19 +305,24 @@ async function execute(interaction: ChatInputCommandInteractionExtended) {
                 return;
             }
             //battle finished
+            const userOneValue = userOnePlay[winCondition];
+            const userTwoValue = userTwoPlay[winCondition];
+
             let winner;
-            if (userOnePlay[winCondition] > userTwoPlay[winCondition]) {
-                winner = baidOne;
-            } else if (userOnePlay[winCondition] < userTwoPlay[winCondition]) {
-                winner = baidTwo;
-            } else {
+            if (userOneValue === userTwoValue) {
                 winner = -1;
+            } else if (
+                (!invertWinConditionLogic && userOneValue > userTwoValue) ||
+                (invertWinConditionLogic && userOneValue < userTwoValue)
+            ) {
+                winner = baidOne;
+            } else {
+                winner = baidTwo;
             }
             await addBattle(uniqueId, baidOne, baidTwo, winner);
         });
 
         const updateBattleEmbed = async (i: MessageComponentInteraction) => {
-            const accuracyCoefficient = 100 / getNoteCountOfSong(uniqueId, difficulty);
             const userOnePlayStr = userOnePlay === undefined ? 'No score submitted' :
                 `${crownIdToEmoji(userOnePlay.crown)}${rankIdToEmoji(userOnePlay.score_rank - 2)} ${userOnePlay.score}
                     ${judgeIdToEmoji(0)}${userOnePlay.good_count}
@@ -302,7 +330,7 @@ async function execute(interaction: ChatInputCommandInteractionExtended) {
                     ${judgeIdToEmoji(2)}${judgeIdToEmoji(3)}${userOnePlay.miss_count}
                     **Max Combo:** ${userOnePlay.combo_count}
                     **Max Drumroll:** ${userOnePlay.drumroll_count}
-                    **Accuracy:** ${(userOnePlay.good_count * accuracyCoefficient + userOnePlay.ok_count * accuracyCoefficient / 2).toFixed(2)}%
+                    **Accuracy:** ${userOnePlay.accuracy.toFixed(2)}%
                     `;
             const userTwoPlayStr = userTwoPlay === undefined ? 'No score submitted' :
                 `${crownIdToEmoji(userTwoPlay.crown)}${rankIdToEmoji(userTwoPlay.score_rank - 2)} ${userTwoPlay.score}
@@ -311,16 +339,16 @@ async function execute(interaction: ChatInputCommandInteractionExtended) {
                     ${judgeIdToEmoji(2)}${judgeIdToEmoji(3)}${userTwoPlay.miss_count}
                     **Max Combo:** ${userTwoPlay.combo_count}
                     **Max Drumroll:** ${userTwoPlay.drumroll_count}
-                    **Accuracy:** ${(userTwoPlay.good_count * accuracyCoefficient + userTwoPlay.ok_count * accuracyCoefficient / 2).toFixed(2)}%
+                    **Accuracy:** ${userOnePlay.accuracy.toFixed(2)}%
                     `;
-            let description = `## ${songName} ${difficultyToEmoji(difficulty)}★${getSongStars(uniqueId, difficulty)}\n`;
+            let description = `## ${songName} ${difficultyToEmoji(difficulty)}★${getSongStars(uniqueId, difficulty)}\n${judgementLine}\n`;
             let components = [submitRow];
 
-            if (userOnePlay !== undefined && userTwoPlay !== undefined) { //checking win condition twice is cringe but idrc
+            if (userOnePlay !== undefined && userTwoPlay !== undefined) {
                 components = [];
-                if (userOnePlay[winCondition] > userTwoPlay[winCondition]) {
+                if (winner == baidOne) {
                     description += `### ${nameOne} wins!`;
-                } else if (userOnePlay[winCondition] < userTwoPlay[winCondition]) {
+                } else if (winner == baidTwo) {
                     description += `### ${nameTwo} wins!`;
                 } else {
                     description += `### Draw!`;
@@ -358,4 +386,4 @@ export const command: Command = {
     data,
     execute,
     autocomplete
-}
+};
