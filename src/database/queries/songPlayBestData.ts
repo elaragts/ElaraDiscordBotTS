@@ -2,7 +2,7 @@
 import type {LeaderboardEntry, MonthlyPlayCount, SongPlay} from '@models/queries.js';
 import {sql} from 'kysely';
 import {Difficulty} from '@constants/datatable.js';
-import {PAGE_LIMIT} from '@constants/common.js';
+import {PAGE_LIMIT, QueryGranularity} from '@constants/common.js';
 
 export async function getLeaderboard(uniqueId: number, difficulty: number, offset: number): Promise<LeaderboardEntry[]> {
     return await db
@@ -99,20 +99,45 @@ export async function getBestScore(uniqueId: number, difficulty: number, baid: n
     };
 }
 
-export async function getMonthlyPlayCount(baid: number): Promise<MonthlyPlayCount[]> {
-    return await db
+export async function getPlayCount(
+    baid: number,
+    granularity: QueryGranularity,
+    startDate?: Date,
+    endDate?: Date
+): Promise<{ period: string; play_count: number }[]> {
+    let dateFormat: string;
+    switch (granularity) {
+        case QueryGranularity.DAY:
+            dateFormat = 'YYYY-MM-DD';
+            break;
+        case QueryGranularity.MONTH:
+            dateFormat = 'YYYY-MM';
+            break;
+        default:
+            throw new Error('Unsupported granularity');
+    }
+
+    let query = db
         .selectFrom('song_play_data')
         .select([
-            sql<string>`TO_CHAR
-            (play_time, 'YYYY-MM')`.as('month'),
+            sql<string>`TO_CHAR(play_time, ${sql.raw(`'${dateFormat}'`)})`.as('period'),
             sql<number>`COUNT(*)`.as('play_count'),
         ])
-        .where('baid', '=', baid)
-        .groupBy(sql`TO_CHAR
-        (play_time, 'YYYY-MM')`)
-        .orderBy('month')
+        .where('baid', '=', baid);
+
+    if (startDate) {
+        query = query.where('play_time', '>=', startDate);
+    }
+    if (endDate) {
+        query = query.where('play_time', '<=', endDate);
+    }
+
+    return await query
+        .groupBy(sql`TO_CHAR(play_time, ${sql.raw(`'${dateFormat}'`)})`)
+        .orderBy('period')
         .execute();
 }
+
 
 export async function getMaxSongPlayDataId(): Promise<number> {
     const row = await db

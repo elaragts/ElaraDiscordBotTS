@@ -1,8 +1,8 @@
 ﻿export const songResultSeparator = '|';
 
 export enum Language {
-    ENGLISH,
-    JAPANESE
+    JAPANESE,
+    ENGLISH
 }
 
 export enum Difficulty {

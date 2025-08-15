@@ -17,3 +17,40 @@ export async function getUserRatingSummary(baid: number) {
         .where('baid', '=', baid)
         .executeTakeFirst();
 }
+
+export async function getUserRatingHistory(
+    baid: number,
+    startDate?: Date,
+    endDate?: Date
+) {
+    let query = db
+        .selectFrom('user_rating_history')
+        .selectAll()
+        .where('baid', '=', baid);
+
+    if (startDate) {
+        query = query.where('rating_date', '>=', startDate);
+    }
+
+    if (endDate) {
+        query = query.where('rating_date', '<=', endDate);
+    }
+
+    return await query
+        .orderBy('rating_date', 'asc')
+        .execute();
+}
+
+export async function getUserRatingBeforeDate(baid: number, date: Date) {
+    const result =  await db
+        .selectFrom('user_rating_history')
+        .select('rating')
+        .where('rating_date', '<=', date)
+        .where((eb) => eb.and([
+            eb('baid', '=', baid),
+            eb('rating_date', '<=', date),
+        ]))
+        .orderBy('rating_date', 'desc')
+        .executeTakeFirst();
+    return result?.rating
+}

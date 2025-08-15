@@ -1,6 +1,7 @@
 ﻿import fs from 'node:fs';
 import path from 'node:path';
 import {fileURLToPath} from 'url';
+import {Difficulty} from '@constants/datatable.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -115,17 +116,17 @@ export const crownIdToEmoji = (crownId: number): string => {
     }
 };
 
-export const difficultyToEmoji = (difficultyId: number): string => {
+export const difficultyToEmoji = (difficultyId: Difficulty): string => {
     switch (difficultyId) {
-        case 1:
+        case Difficulty.EASY:
             return config.easyEmojiId;
-        case 2:
+        case Difficulty.NORMAL:
             return config.normalEmojiId;
-        case 3:
+        case Difficulty.HARD:
             return config.hardEmojiId;
-        case 4:
+        case Difficulty.ONI:
             return config.oniEmojiId;
-        case 5:
+        case Difficulty.URA:
             return config.uraEmojiId;
         default:
             throw new Error('Unknown difficulty');

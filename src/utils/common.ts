@@ -1,4 +1,6 @@
 ﻿import {Difficulty, Genre, Language} from "@constants/datatable.js";
+import { DateRangeTypes } from "@constants/discord.js";
+import {startOfDay, startOfMonth, startOfYear, subDays} from 'date-fns';
 
 function isEnumValueInRange<T extends Record<string, string | number>>(enumObj: T, value: number): boolean {
     return Object.values(enumObj)
@@ -105,5 +107,27 @@ export function danIdToName(rankId: number): string {
             return '達人';
         default:
             return '';
+    }
+}
+
+
+export function getDateRangeFromType(type: DateRangeTypes): { startDate: Date, endDate: Date } {
+    const now = new Date();
+    const startOfToday = startOfDay(now)
+    switch (type) {
+        case DateRangeTypes.TO_DATE:
+            return { startDate: new Date(0), endDate: startOfToday };
+        case DateRangeTypes.YEAR:
+            return { startDate: startOfDay(subDays(now, 365)), endDate: startOfToday };
+        case DateRangeTypes.YTD:
+            return { startDate: startOfYear(now), endDate: startOfToday };
+        case DateRangeTypes.MONTH:
+            return { startDate: startOfDay(subDays(now, 30)), endDate: startOfToday };
+        case DateRangeTypes.MTD:
+            return { startDate: startOfMonth(now), endDate: startOfToday };
+        case DateRangeTypes.TODAY:
+            return { startDate: startOfDay(now), endDate: startOfToday };
+        default:
+            return { startDate: new Date(0), endDate: startOfToday };
     }
 }

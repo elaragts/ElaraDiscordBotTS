@@ -214,6 +214,13 @@ export interface UserTop50 {
     accuracy: Numeric;
 }
 
+export interface UserRatingHistory {
+    baid: Int8;
+    id: Generated<Int8>;
+    rating: Numeric;
+    rating_date: Timestamp;
+}
+
 export interface DB {
     __EFMigrationsHistory: _EFMigrationsHistory;
     ai_score_data: AiScoreData;
@@ -230,6 +237,7 @@ export interface DB {
     user_chassis: UserChassis;
     user_data: UserData;
     user_discord: UserDiscord;
+    user_rating_history: UserRatingHistory;
     user_rating_summaries: UserRatingSummaries;
     user_song_rates: UserSongRates;
     user_top50: UserTop50;
