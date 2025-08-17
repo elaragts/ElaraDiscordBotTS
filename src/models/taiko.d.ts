@@ -193,13 +193,13 @@ export interface UserDiscord {
     discord_id: string;
 }
 
-export interface UserRatingSummaries {
+export interface UserRatingSummary {
     baid: Int8;
     min_top50_rate: Generated<Numeric>;
     top50_sum_rate: Generated<Numeric>;
 }
 
-export interface UserSongRates {
+export interface UserSongRate {
     baid: Int8;
     external_difficulty: Numeric;
     song_id: number;
@@ -238,7 +238,7 @@ export interface DB {
     user_data: UserData;
     user_discord: UserDiscord;
     user_rating_history: UserRatingHistory;
-    user_rating_summaries: UserRatingSummaries;
-    user_song_rates: UserSongRates;
-    user_top50: UserTop50;
+    user_rating_summary: UserRatingSummary;
+    user_song_rate: UserSongRate;
+    user_top_50: UserTop50;
 }

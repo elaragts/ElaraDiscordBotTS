@@ -9,6 +9,7 @@ import {CostumeData} from '@models/queries.js';
 import {EMBED_COLOUR} from '@constants/discord.js';
 import {ChatInputCommandInteractionExtended, Command} from '@models/discord.js';
 import {getBattleStats} from '@database/queries/battle.js';
+import {getUserRatingSummary} from '@database/queries/rating.js';
 
 const COMMAND_NAME = 'Profile';
 
@@ -45,6 +46,7 @@ async function execute(interaction: ChatInputCommandInteractionExtended) {
     }
 
     const battleStats = await getBattleStats(baid)
+    const ratingSummary = await getUserRatingSummary(baid);
     const clearState = daniClearStateToEmoji(profile.clear_state);
     const dani = danIdToName(profile.dan_id);
     let achievementPanelEmoji = '';
@@ -99,13 +101,17 @@ async function execute(interaction: ChatInputCommandInteractionExtended) {
     const avatar = await createCostumeAvatar(costumeData);
     const attachment = new AttachmentBuilder(avatar, {name: 'avatar.png'});
 
-    let description = `Title: ${profile.title}`
-    description += `\nPlay Count: ${profile.play_count}`
-    if (battleStats.total_battles > 0) {
-        description += `\nBattles played: ${battleStats.total_battles}`
-        description += `\nBattles Won: ${battleStats.battles_won}`
+    let description = `**Title:** ${profile.title}`
+    description += `\n**Play Count:** ${profile.play_count}`
+
+    if (ratingSummary !== undefined && ratingSummary.top50_sum_rate > 0) {
+        description += `\n**Rating:** ${Number(ratingSummary.top50_sum_rate).toFixed(2)}`;
     }
 
+    if (battleStats.total_battles > 0) {
+        description += `\n**Battles played:** ${battleStats.total_battles}`
+        description += `\n**Battles Won:** ${battleStats.battles_won}`
+    }
 
     //construct embed
     const returnEmbed = {

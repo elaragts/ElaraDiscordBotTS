@@ -2,7 +2,7 @@
 
 export async function getUserTop50(baid: number) {
     return await db
-        .selectFrom('user_top50')
+        .selectFrom('user_top_50')
         .selectAll()
         .where('baid', '=', baid)
         .orderBy('song_rate', 'desc')
@@ -12,7 +12,7 @@ export async function getUserTop50(baid: number) {
 
 export async function getUserRatingSummary(baid: number) {
     return await db
-        .selectFrom('user_rating_summaries')
+        .selectFrom('user_rating_summary')
         .selectAll()
         .where('baid', '=', baid)
         .executeTakeFirst();
@@ -45,7 +45,6 @@ export async function getUserRatingBeforeDate(baid: number, date: Date) {
     const result =  await db
         .selectFrom('user_rating_history')
         .select('rating')
-        .where('rating_date', '<=', date)
         .where((eb) => eb.and([
             eb('baid', '=', baid),
             eb('rating_date', '<=', date),
@@ -53,4 +52,17 @@ export async function getUserRatingBeforeDate(baid: number, date: Date) {
         .orderBy('rating_date', 'desc')
         .executeTakeFirst();
     return result?.rating
+}
+
+export async function getUserSongRating(baid: number, song_id: number) {
+    const result = await db
+        .selectFrom('user_song_rate')
+        .select('song_rate')
+        .where((eb) => eb.and([
+            eb('baid', '=', baid),
+            eb('song_id', '=', song_id),
+            ]))
+        .executeTakeFirst();
+
+    return result?.song_rate;
 }

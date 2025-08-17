@@ -13,6 +13,7 @@ import {getCostume} from '@database/queries/userData.js';
 import {createCostumeAvatar} from '@utils/costume.js';
 import {DIFFICULTY_CHOICES, EMBED_COLOUR} from '@constants/discord.js';
 import {ChatInputCommandInteractionExtended, Command} from '@models/discord.js';
+import {getUserSongRating} from '@database/queries/rating.js';
 
 const COMMAND_NAME = 'My Stats';
 
@@ -82,6 +83,7 @@ async function execute(interaction: ChatInputCommandInteractionExtended) {
     //error checking done
     const rank = rankIdToEmoji(song.score_rank - 2);
     const crown = crownIdToEmoji(song.crown);
+    const rating = await getUserSongRating(baid, uniqueId) || 0;
     let desc = `${crown}${rank}`;
     let judgement = '';
     judgement += `${judgeIdToEmoji(0)}${song.good_count}\n`;
@@ -97,6 +99,7 @@ async function execute(interaction: ChatInputCommandInteractionExtended) {
     let zenryouLabel = '全良回数';
     let leaderboardLabel = 'EGTSランキング';
     let leaderboardSuffix = '位';
+    let ratingLabel = 'レーティング';
     if (lang === 1) {
         pointsLabel = ' points';
         judgementLabel = 'judgement';
@@ -108,12 +111,26 @@ async function execute(interaction: ChatInputCommandInteractionExtended) {
         zenryouLabel = 'Donderful Combo Count';
         leaderboardLabel = 'Leaderboard Placement';
         leaderboardSuffix = '';
+        ratingLabel = 'Raw Rating';
     }
 
     //no results
     if (getSongStars(uniqueId, difficulty) === 0) {
         desc = 'This difficulty does not exist.';
     }
+
+    let description = '';
+    description += `${leaderboardLabel}: ${song.leaderboard_position}${leaderboardSuffix}`;
+    description += `\n${playCountLabel}: ${song.play_count}`;
+    description += `\n${clearCountLabel}: ${song.clear_count}`;
+    description += `\n${fullComboLabel}: ${song.full_combo_count}`;
+    description += `\n${zenryouLabel}: ${song.all_perfect_count}`;
+    if (rating > 0) {
+        description += `\n${ratingLabel}: ${Number(rating).toFixed(2)}`;
+    }
+    description += `\n## ${desc}${song.score}${pointsLabel}`;
+
+
     //construct avatar
     const costumeData = (await getCostume(baid))!;
     const avatar = await createCostumeAvatar(costumeData);
@@ -122,7 +139,7 @@ async function execute(interaction: ChatInputCommandInteractionExtended) {
     const returnEmbed = {
         title: `${song.my_don_name} | ${getSongTitle(uniqueId, lang)} | ${difficultyIdToName(difficulty, lang)}${difficultyToEmoji(difficulty)}★${getSongStars(uniqueId, difficulty)}`,
         color: EMBED_COLOUR,
-        description: `${leaderboardLabel}: ${song.leaderboard_position}${leaderboardSuffix}\n${playCountLabel}: ${song.play_count}\n${clearCountLabel}: ${song.clear_count}\n${fullComboLabel}: ${song.full_combo_count}\n${zenryouLabel}: ${song.all_perfect_count}\n## ${desc}${song.score}${pointsLabel}`,
+        description: description,
         author: {
             name: COMMAND_NAME
         },
