@@ -56,7 +56,7 @@ export async function execute(interaction: ChatInputCommandInteraction) {
         }
         const offset = (page - 1) * PAGE_LIMIT;
         const result = await getUserChassisList(chassisId, offset);
-        let desc = result.length > 0 ? '' : 'No results found';
+        let desc = result.length > 0 ? `ChassisID: \`${chassisId}\`\n` : 'No results found';
         for (let i in result) {
             desc += `${i + 1}. baid: \`${result[i].baid}\` (${result[i].my_don_name}) - ${result[i].discord_id ? `<@${result[i].discord_id}> - ` : ''}Last used: ${result[i].last_used.toDateString()}\n`;
         }
