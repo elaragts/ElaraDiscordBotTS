@@ -3,8 +3,7 @@ import {getBaidFromDiscordId} from '@database/queries/userDiscord.js';
 import {editReplyWithErrorMessage, replyWithErrorMessage} from '@utils/discord.js';
 import {getMyDonName} from '@database/queries/userData.js';
 import {getPlayCount} from '@database/queries/songPlayBestData.js';
-import {format, parse, addMonths, isBefore, addDays, startOfDay, startOfMonth} from 'date-fns';
-import type {MonthlyPlayCount} from '@models/queries.js';
+import {format, parse, addMonths, isBefore, addDays, startOfDay, startOfMonth, endOfDay, endOfMonth} from 'date-fns';
 import {DATE_RANGE_CHOICES, DateRangeTypes, EMBED_COLOUR, GRAPH_TYPE_CHOICES, GraphTypes} from '@constants/discord.js';
 import {ChatInputCommandInteractionExtended, Command} from '@models/discord.js';
 import {getUserRatingBeforeDate, getUserRatingHistory} from '@database/queries/rating.js';
@@ -119,7 +118,12 @@ async function getPlaycountGraphConfig(
         granularityText = 'Monthly';
     }
 
-    const countData = await getPlayCount(baid, granularity, startDate, endDate);
+    const adjustedEndDate = granularity === QueryGranularity.DAY
+        ? endOfDay(endDate)
+        : endOfMonth(endDate);
+
+    const countData = await getPlayCount(baid, granularity, startDate, adjustedEndDate);
+
     type PlayCountRow = { period: string; play_count: number };
     let fullTimeline: PlayCountRow[];
 
@@ -156,7 +160,7 @@ async function getPlaycountGraphConfig(
         }
     }
 
-    // 🔹 Extend timeline up to current date/month with zeroes
+    //timeline up to current date/month with zeroes
     const now = granularity === QueryGranularity.DAY ? startOfDay(new Date()) : startOfMonth(new Date());
     let lastPeriodDate = parse(fullTimeline[fullTimeline.length - 1].period, fmt, new Date());
 
