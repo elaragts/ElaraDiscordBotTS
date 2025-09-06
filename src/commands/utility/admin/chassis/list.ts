@@ -28,7 +28,7 @@ export async function execute(interaction: ChatInputCommandInteraction) {
         const result = await getUserUsedChassisList(baid, offset);
         let desc = result.length > 0 ? '' : 'No results found';
         for (let i in result) {
-            desc += `${i + 1}. \`${result[i].chassis_id}\` - Assigned to: <@${result[i].discord_id}> - Last used: ${result[i].last_used.toDateString()}\n`;
+            desc += `${(page - 1) * PAGE_LIMIT + parseInt(i) + 1}. \`${result[i].chassis_id}\` - Assigned to: <@${result[i].discord_id}> - Last used: ${result[i].last_used.toDateString()}\n`;
         }
         returnEmbed = {
             title: `baid: ${baid} (${myDonName})`,
@@ -58,7 +58,7 @@ export async function execute(interaction: ChatInputCommandInteraction) {
         const result = await getUserChassisList(chassisId, offset);
         let desc = result.length > 0 ? `ChassisID: \`${chassisId}\`\n` : 'No results found';
         for (let i in result) {
-            desc += `${i + 1}. baid: \`${result[i].baid}\` (${result[i].my_don_name}) - ${result[i].discord_id ? `<@${result[i].discord_id}> - ` : ''}Last used: ${result[i].last_used.toDateString()}\n`;
+            desc += `${(page - 1) * PAGE_LIMIT + parseInt(i) + 1}. baid: \`${result[i].baid}\` (${result[i].my_don_name}) - ${result[i].discord_id ? `<@${result[i].discord_id}> - ` : ''}Last used: ${result[i].last_used.toDateString()}\n`;
         }
         returnEmbed = {
             description: desc,
