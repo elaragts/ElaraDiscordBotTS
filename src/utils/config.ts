@@ -48,6 +48,7 @@ export function validateConfig(): Record<string, any> {
         serverBoostRoleId: 'string',
         adminRoleId: 'string',
         whitelistedAdmins: 'object',
+        lockedSongs: 'object',
         deployment: 'string',
         // Emoji ID fields
         clearEmojiId: 'string',

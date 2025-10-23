@@ -14,6 +14,7 @@ export function initializeDatatable() {
 }
 
 function initializeMusicInfo() {
+    const lockedSongsSet = new Set(config.lockedSongs);
     let rawMusicinfoData;
     try {
         rawMusicinfoData = fs.readFileSync(config.musicinfoPath, 'utf-8');
@@ -34,6 +35,7 @@ function initializeMusicInfo() {
     }
 
     for (const item of parsedMusicinfo.items) {
+        if (lockedSongsSet.has(item['uniqueId'])) continue;
         musicinfo.set(item['uniqueId'], {
             id: item['id'],
             uniqueId: item['uniqueId'],
