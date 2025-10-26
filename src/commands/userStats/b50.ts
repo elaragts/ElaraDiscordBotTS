@@ -47,7 +47,7 @@ async function execute(interaction: ChatInputCommandInteractionExtended) {
     }
 
     const ratingSummary = await getUserRatingSummary(baid);
-    const weightedSum = Number(ratingSummary?.top50_sum_rate ?? 0);
+    const weightedSum = Number(ratingSummary?.top_50_sum_rate ?? 0);
 
     const maxSum = result.reduce((sum, entry, i) => sum + Number(entry.song_rate), 0);
 

@@ -24,6 +24,7 @@ export type MonthlyPlayCount = {
 export type UserProfile = {
     my_don_name: string;
     title: string;
+    last_play_datetime: Date;
     achievement_display_difficulty: number;
     current_body: number;
     current_face: number;

@@ -78,6 +78,7 @@ export async function getUserProfile(baid: number): Promise<UserProfile | undefi
             WHERE rn = 1)
             SELECT ud.my_don_name,
                    ud.title,
+                   ud.last_play_datetime,
                    ud.achievement_display_difficulty,
                    ud.current_body,
                    ud.current_face,

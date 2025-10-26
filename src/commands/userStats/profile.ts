@@ -104,8 +104,8 @@ async function execute(interaction: ChatInputCommandInteractionExtended) {
     let description = `**Title:** ${profile.title}`
     description += `\n**Play Count:** ${profile.play_count}`
 
-    if (ratingSummary !== undefined && ratingSummary.top50_sum_rate > 0) {
-        description += `\n**Rating:** ${Number(ratingSummary.top50_sum_rate).toFixed(2)}`;
+    if (ratingSummary !== undefined && ratingSummary.top_50_sum_rate > 0) {
+        description += `\n**Rating:** ${Number(ratingSummary.top_50_sum_rate).toFixed(2)}`;
     }
 
     if (battleStats.total_battles > 0) {
@@ -123,6 +123,7 @@ async function execute(interaction: ChatInputCommandInteractionExtended) {
         }, author: {
             name: COMMAND_NAME
         },
+        timestamp: profile.last_play_datetime.toISOString(),
         fields: [
             {
                 name: achievementPanelTitle,

@@ -195,8 +195,8 @@ export interface UserDiscord {
 
 export interface UserRatingSummary {
     baid: Int8;
-    min_top50_rate: Generated<Numeric>;
-    top50_sum_rate: Generated<Numeric>;
+    min_top_50_rate: Generated<Numeric>;
+    top_50_sum_rate: Generated<Numeric>;
 }
 
 export interface UserSongRate {
