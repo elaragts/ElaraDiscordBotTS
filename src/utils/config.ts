@@ -42,6 +42,7 @@ export function validateConfig(): Record<string, any> {
     const expectedSchema: Record<string, 'string' | 'object'> = {
         guildId: 'string',
         botChannelId: 'string',
+        notificationChannelId: 'string',
         musicinfoPath: 'string',
         wordlistPath: 'string',
         spritesPath: 'string',

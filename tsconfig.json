@@ -10,6 +10,7 @@
       "@bot/*": ["bot/*"],
       "@constants/*": ["constants/*"],
       "@database/*": ["database/*"],
+      "@events/*": ["events/*"],
       "@models/*": ["models/*"],
       "@utils/*": ["utils/*"]
     },

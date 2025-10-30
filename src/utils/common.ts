@@ -110,7 +110,6 @@ export function danIdToName(rankId: number): string {
     }
 }
 
-
 export function getDateRangeFromType(type: DateRangeTypes): { startDate: Date, endDate: Date } {
     const now = new Date();
     const startOfToday = startOfDay(now)
@@ -129,5 +128,15 @@ export function getDateRangeFromType(type: DateRangeTypes): { startDate: Date, e
             return { startDate: startOfDay(now), endDate: startOfToday };
         default:
             return { startDate: new Date(0), endDate: startOfToday };
+    }
+}
+
+export function leaderboardDeltaToString(delta: number) {
+    if (delta > 0) {
+        return `⬆${delta}`
+    } else if (delta < 0) {
+        return `⬇${delta*-1}`
+    } else {
+        return ''
     }
 }
