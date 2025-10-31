@@ -83,7 +83,7 @@ async function execute(interaction: ChatInputCommandInteractionExtended) {
     //error checking done
     const rank = rankIdToEmoji(song.score_rank - 2);
     const crown = crownIdToEmoji(song.crown);
-    const rating = await getUserSongRating(baid, uniqueId, difficulty) || 0;
+    const rating = await getUserSongRating(baid, uniqueId, difficulty) ?? 0;
     let desc = `${crown}${rank}`;
     let judgement = '';
     judgement += `${judgeIdToEmoji(0)}${song.good_count}\n`;
