@@ -13,7 +13,7 @@ import {replyWithErrorMessage, returnSongAutocomplete as autocomplete, validateS
 import {client} from '@bot/client.js';
 import {getBaidFromDiscordId} from '@database/queries/userDiscord.js';
 import {getFavouriteSongsArray, getMyDonName, setFavouriteSongsArray} from '@database/queries/userData.js';
-import {getNoteCountOfSong, getSongStars, getSongTitle} from '@utils/datatable.js';
+import {getSongNoteCount, getSongStars, getSongTitle} from '@utils/datatable.js';
 import {crownIdToEmoji, difficultyToEmoji, judgeIdToEmoji, rankIdToEmoji} from '@utils/config.js';
 import {getLatestUserPlay, getMaxSongPlayDataId} from '@database/queries/songPlayBestData.js';
 import {SongPlay} from '@models/queries.js';
@@ -113,7 +113,7 @@ async function execute(interaction: ChatInputCommandInteractionExtended) {
     const uniqueId = songValidationResult.uniqueId;
     const lang = songValidationResult.lang;
     const songStars = getSongStars(uniqueId, difficulty);
-    const accuracyCoefficient = 100 / getNoteCountOfSong(uniqueId, difficulty);
+    const accuracyCoefficient = 100 / getSongNoteCount(uniqueId, difficulty);
 
 
     if (!songStars) {

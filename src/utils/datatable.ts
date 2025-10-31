@@ -1,5 +1,5 @@
 ﻿import fs from 'node:fs';
-import {MusicinfoItem, SongInfo} from '@models/datatable.js';
+import {InternalDifficultyItem, MusicinfoItem, SongInfo} from '@models/datatable.js';
 import {Difficulty, Language, songResultSeparator} from '@constants/datatable.js';
 import config from '#config' with {type: 'json'};
 import {SearchSongResult} from '@models/discord.js';
@@ -7,10 +7,13 @@ import {SearchSongResult} from '@models/discord.js';
 const songTitles: Map<number, [string, string]> = new Map();
 const musicinfo: Map<number, MusicinfoItem> = new Map();
 const songIdMap: Map<string, number> = new Map();
+const internalDifficulty: Map<number, Map<Difficulty, InternalDifficultyItem>> = new Map();
+
 
 export function initializeDatatable() {
     initializeMusicInfo();
     initializeWordlist();
+    initializeInternalDifficulties();
 }
 
 function initializeMusicInfo() {
@@ -92,6 +95,45 @@ function initializeWordlist() {
     }
 }
 
+export function initializeInternalDifficulties()  {
+    let rawData: string;
+
+    try {
+        rawData = fs.readFileSync(config.internalDifficultyDataPath, "utf-8");
+    } catch (err) {
+        throw new Error(`Error reading internal difficulty file: ${err}`);
+    }
+
+    if (rawData.charCodeAt(0) === 0xFEFF) {
+        rawData = rawData.slice(1);
+    }
+
+    let parsed: Record<string, Record<string, any>>;
+    try {
+        parsed = JSON.parse(rawData);
+    } catch (err) {
+        throw new Error(`Invalid JSON in internal difficulty file: ${err}`);
+    }
+
+
+    for (const [uniqueIdStr, difficulties] of Object.entries(parsed)) {
+        const uniqueId = Number(uniqueIdStr);
+        const diffMap = new Map<Difficulty, InternalDifficultyItem>();
+
+        for (const [diffKey, data] of Object.entries(difficulties)) {
+            const diff = Number(diffKey) as Difficulty;
+
+            diffMap.set(diff, {
+                bpm: Number(data.bpm),
+                bpmChange: data.bpmChange,
+                star: Number(data.star),
+                difficulty: Number(data.difficulty),
+            });
+        }
+
+        internalDifficulty.set(uniqueId, diffMap);
+    }
+}
 
 export function searchSong(query: string): Promise<SearchSongResult[]> {
     return Promise.resolve(searchSongSync(query));
@@ -151,9 +193,12 @@ export function getSongStars(uniqueId: number, difficulty: Difficulty): number {
     return result.stars[difficulty];
 }
 
-export function getNoteCountOfSong(uniqueId: number, difficulty: Difficulty): number {
+export function getSongNoteCount(uniqueId: number, difficulty: Difficulty): number {
     const result = musicinfo.get(uniqueId);
     if (result === undefined) return 0;
     return result.maxCombos[difficulty];
 }
 
+export function getSongInternalDifficulty(uniqueId: number, difficulty: Difficulty): number {
+    return internalDifficulty.get(uniqueId)?.get(difficulty)?.difficulty ?? 0;
+}

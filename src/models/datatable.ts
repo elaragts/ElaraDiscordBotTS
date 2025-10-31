@@ -18,3 +18,9 @@ export interface SongInfo {
     musicinfo: MusicinfoItem;
 }
 
+export interface InternalDifficultyItem {
+    bpm: number;
+    bpmChange?: string;
+    star: number;
+    difficulty: number;
+}
