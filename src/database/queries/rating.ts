@@ -1,4 +1,5 @@
 ﻿import {db} from '@database/index.js';
+import {Difficulty} from "@constants/datatable.js";
 
 export async function getUserTop50(baid: number) {
     return await db
@@ -54,13 +55,14 @@ export async function getUserRatingBeforeDate(baid: number, date: Date) {
     return result?.rating
 }
 
-export async function getUserSongRating(baid: number, song_id: number) {
+export async function getUserSongRating(baid: number, song_id: number, difficulty: Difficulty) {
     const result = await db
         .selectFrom('user_song_rate')
         .select('song_rate')
         .where((eb) => eb.and([
             eb('baid', '=', baid),
             eb('song_id', '=', song_id),
+            eb('external_difficulty', '=', difficulty)
             ]))
         .executeTakeFirst();
 

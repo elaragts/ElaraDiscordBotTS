@@ -130,4 +130,13 @@ export function getDateRangeFromType(type: DateRangeTypes): { startDate: Date, e
         default:
             return { startDate: new Date(0), endDate: startOfToday };
     }
+
+}
+
+export function getMaxPotentialRatingFromInternalDifficulty(interalDifficulty: number): number {
+    const RATING_COEFFICIENT = Math.PI
+    const DIFFICULTY_POWER = 1.268
+    const MAX_RANK_BONUS = 1.15 //SSS+ (全良)
+    const MAX_RESULT_BONUS = 1.05 //Full Combo
+    return RATING_COEFFICIENT * (interalDifficulty ** DIFFICULTY_POWER) * MAX_RANK_BONUS * MAX_RESULT_BONUS
 }

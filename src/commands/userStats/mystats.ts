@@ -6,8 +6,8 @@ import {
 } from '@utils/discord.js';
 import {getBaidFromDiscordId} from '@database/queries/userDiscord.js';
 import {getBestScore} from '@database/queries/songPlayBestData.js';
-import {getSongStars, getSongTitle} from '@utils/datatable.js';
-import {difficultyIdToName} from '@utils/common.js';
+import {getSongInternalDifficulty, getSongStars, getSongTitle} from '@utils/datatable.js';
+import {difficultyIdToName, getMaxPotentialRatingFromInternalDifficulty} from '@utils/common.js';
 import {crownIdToEmoji, difficultyToEmoji, judgeIdToEmoji, rankIdToEmoji} from '@utils/config.js';
 import {getCostume} from '@database/queries/userData.js';
 import {createCostumeAvatar} from '@utils/costume.js';
@@ -83,7 +83,7 @@ async function execute(interaction: ChatInputCommandInteractionExtended) {
     //error checking done
     const rank = rankIdToEmoji(song.score_rank - 2);
     const crown = crownIdToEmoji(song.crown);
-    const rating = await getUserSongRating(baid, uniqueId) || 0;
+    const rating = await getUserSongRating(baid, uniqueId, difficulty) || 0;
     let desc = `${crown}${rank}`;
     let judgement = '';
     judgement += `${judgeIdToEmoji(0)}${song.good_count}\n`;
@@ -126,7 +126,8 @@ async function execute(interaction: ChatInputCommandInteractionExtended) {
     description += `\n${fullComboLabel}: ${song.full_combo_count}`;
     description += `\n${zenryouLabel}: ${song.all_perfect_count}`;
     if (rating > 0) {
-        description += `\n${ratingLabel}: ${Number(rating).toFixed(2)}`;
+        const internalDifficulty = getSongInternalDifficulty(uniqueId, difficulty);
+        description += `\n${ratingLabel}: ${Number(rating).toFixed(2)}/${getMaxPotentialRatingFromInternalDifficulty(internalDifficulty).toFixed(2)}`;
     }
     description += `\n## ${desc}${song.score}${pointsLabel}`;
 
