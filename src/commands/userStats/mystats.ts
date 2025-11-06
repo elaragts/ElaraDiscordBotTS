@@ -99,7 +99,7 @@ async function execute(interaction: ChatInputCommandInteractionExtended) {
     let zenryouLabel = '全良回数';
     let leaderboardLabel = 'EGTSランキング';
     let leaderboardSuffix = '位';
-    let ratingLabel = 'レーティング';
+    let ratingLabel = 'レート';
     if (lang === 1) {
         pointsLabel = ' points';
         judgementLabel = 'judgement';
