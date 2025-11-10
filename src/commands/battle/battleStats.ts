@@ -2,7 +2,7 @@ import {AttachmentBuilder, SlashCommandBuilder} from 'discord.js';
 import {getBaidFromDiscordId} from '@database/queries/userDiscord.js';
 import {replyWithErrorMessage} from '@utils/discord.js';
 import {getCostume, getMyDonName} from '@database/queries/userData.js';
-import {EMBED_COLOUR} from '@constants/discord.js';
+import {ALL_CONTEXTS, EMBED_COLOUR} from '@constants/discord.js';
 import {ChatInputCommandInteractionExtended, Command} from '@models/discord.js';
 import {getBattleStats, getLatestBattles} from '@database/queries/battle.js';
 import {PAGE_LIMIT} from '@constants/common.js';
@@ -13,6 +13,7 @@ const COMMAND_NAME = 'Battle Stats';
 const data = new SlashCommandBuilder()
     .setName('battlestats')
     .setDescription('Battle Stats')
+    .setContexts(ALL_CONTEXTS)
     .addUserOption(option =>
         option.setName('user')
             .setDescription('The user to obtain the stats from')

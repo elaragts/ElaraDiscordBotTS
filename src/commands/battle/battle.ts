@@ -1,7 +1,7 @@
 ﻿import {
     ActionRowBuilder,
     ButtonBuilder,
-    ButtonStyle,
+    ButtonStyle, InteractionContextType,
     InteractionResponse,
     MessageComponentInteraction,
     MessageFlags,
@@ -19,6 +19,7 @@ import {getLatestUserPlay, getMaxSongPlayDataId} from '@database/queries/songPla
 import {SongPlay} from '@models/queries.js';
 import {addBattle} from '@database/queries/battle.js';
 import {
+    ALL_CONTEXTS,
     BattleWinCondition,
     BattleWinConditionLabel,
     BattleWinDirection,
@@ -32,6 +33,7 @@ const COMMAND_NAME = 'Battle';
 const data = new SlashCommandBuilder()
     .setName('battle')
     .setDescription('Battle against another user')
+    .setContexts(ALL_CONTEXTS)
     .addStringOption(option =>
         option.setName('song')
             .setDescription('Song name')
