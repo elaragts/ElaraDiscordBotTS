@@ -1,5 +1,7 @@
 /tmp
 /out-tsc
+dist/
+build/
 
 /node_modules
 npm-debug.log*
@@ -10,11 +12,10 @@ yarn-error.log*
 
 .vscode/*
 
-.env
 config.json
-dist/
-
 musicinfo.json
 wordlist.json
 
 **/.DS_Store
+.env
+
