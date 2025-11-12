@@ -16,3 +16,5 @@ dist/
 
 musicinfo.json
 wordlist.json
+
+**/.DS_Store
