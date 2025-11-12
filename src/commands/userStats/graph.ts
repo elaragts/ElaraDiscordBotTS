@@ -5,7 +5,7 @@ import {getMyDonName} from '@database/queries/userData.js';
 import {getPlayCount} from '@database/queries/songPlayBestData.js';
 import {format, parse, addMonths, isBefore, addDays, startOfDay, startOfMonth, endOfDay, endOfMonth} from 'date-fns';
 import {
-    ALL_CONTEXTS,
+    ALL_CONTEXTS, ALL_INTEGRATION_TYPES,
     DATE_RANGE_CHOICES,
     DateRangeTypes,
     EMBED_COLOUR,
@@ -23,6 +23,7 @@ const data = new SlashCommandBuilder()
     .setName('graph')
     .setDescription('Graph Statistics')
     .setContexts(ALL_CONTEXTS)
+    .setIntegrationTypes(ALL_INTEGRATION_TYPES)
     .addStringOption(
         option =>
             option.setName('type')

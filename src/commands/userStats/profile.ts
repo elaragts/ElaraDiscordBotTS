@@ -1,4 +1,4 @@
-﻿import {SlashCommandBuilder, AttachmentBuilder} from 'discord.js';
+﻿import {SlashCommandBuilder, AttachmentBuilder, ApplicationIntegrationType} from 'discord.js';
 import {getBaidFromDiscordId} from '@database/queries/userDiscord.js';
 import {replyWithErrorMessage} from '@utils/discord.js';
 import {getUserProfile} from '@database/queries/userData.js';
@@ -6,7 +6,7 @@ import {crownIdToEmoji, daniClearStateToEmoji, difficultyToEmoji, rankIdToEmoji}
 import {danIdToName} from '@utils/common.js';
 import {createCostumeAvatar} from '@utils/costume.js';
 import {CostumeData} from '@models/queries.js';
-import {ALL_CONTEXTS, EMBED_COLOUR} from '@constants/discord.js';
+import {ALL_CONTEXTS, ALL_INTEGRATION_TYPES, EMBED_COLOUR} from '@constants/discord.js';
 import {ChatInputCommandInteractionExtended, Command} from '@models/discord.js';
 import {getBattleStats} from '@database/queries/battle.js';
 import {getUserRatingSummary} from '@database/queries/rating.js';
@@ -17,6 +17,7 @@ const data = new SlashCommandBuilder()
     .setName('profile')
     .setDescription('User profile')
     .setContexts(ALL_CONTEXTS)
+    .setIntegrationTypes(ALL_INTEGRATION_TYPES)
     .addUserOption(option =>
         option.setName('user')
             .setDescription('The user to obtain the score from')

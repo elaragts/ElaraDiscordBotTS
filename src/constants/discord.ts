@@ -1,5 +1,5 @@
 ﻿import {Difficulty} from '@constants/datatable.js';
-import {InteractionContextType} from "discord.js";
+import {ApplicationIntegrationType, InteractionContextType} from "discord.js";
 
 export const EMBED_COLOUR = parseInt('EB2353', 16);
 
@@ -73,3 +73,7 @@ export const BattleWinDirectionLabel = {
 };
 
 export const ALL_CONTEXTS = [InteractionContextType.Guild, InteractionContextType.BotDM, InteractionContextType.PrivateChannel]
+export const ALL_INTEGRATION_TYPES = [
+    ApplicationIntegrationType.UserInstall,
+    ApplicationIntegrationType.GuildInstall
+];
