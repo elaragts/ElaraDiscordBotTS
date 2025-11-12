@@ -1,9 +1,21 @@
-﻿import {AutocompleteInteraction, ChatInputCommandInteraction, Collection, Events, MessageFlags} from 'discord.js';
+﻿import {
+    AutocompleteInteraction,
+    ChatInputCommandInteraction,
+    Collection,
+    Events,
+    InteractionContextType,
+    MessageFlags
+} from 'discord.js';
 import {Command, ClientExtended} from '@models/discord.js';
 import path from 'node:path';
 import { readdir } from "fs/promises";
 import logger from '@utils/logger.js';
-import {getExtendedClient, getExtendedChatInputCommandInteraction, safeGetSubcommand} from '@utils/discord.js';
+import {
+    getExtendedClient,
+    getExtendedChatInputCommandInteraction,
+    safeGetSubcommand,
+    replyWithErrorMessage
+} from '@utils/discord.js';
 import {fileURLToPath} from 'url';
 
 const __filename = fileURLToPath(import.meta.url);
@@ -56,6 +68,12 @@ async function handleChatInputCommand(baseInteraction: ChatInputCommandInteracti
     if (!command) {
         logger.error(`No command matching ${interaction.commandName} was found`);
         return;
+    }
+
+    //interaction.guild is null if bot is not installed in the server used
+    if (interaction.context === InteractionContextType.Guild && interaction.guild == null) {
+        await replyWithErrorMessage(interaction, interaction.commandName, 'EGTS Bot is not installed in this server!')
+        return
     }
     const subcommand = safeGetSubcommand(interaction);
     const fullCommandName = `${interaction.commandName}${subcommand ? ` ${subcommand}` : ''}`;
