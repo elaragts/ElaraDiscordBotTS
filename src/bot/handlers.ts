@@ -23,7 +23,7 @@ const __dirname = path.dirname(__filename);
 
 export async function registerHandlers(client: ClientExtended) {
     client.once(Events.ClientReady, readyClient => {
-        logger.info(`Ready! Logged in as ${readyClient.user.tag}`);
+        logger.info(`Ready! Logged in as ${readyClient.user.tag} in ${readyClient.guilds.cache.size} guilds`);
     });
 
     client.on(Events.InteractionCreate, async interaction => {
