@@ -1,4 +1,4 @@
-﻿import {SlashCommandBuilder, MessageFlags} from 'discord.js';
+﻿import {SlashCommandBuilder, MessageFlags, InteractionContextType} from 'discord.js';
 import config from '#config' with {type: 'json'};
 import {generateAndRegisterChassis, getChassisIdFromDiscordId} from '@database/queries/chassis.js';
 import {replyWithErrorMessage} from '@utils/discord.js';
@@ -10,6 +10,7 @@ const COMMAND_NAME = 'ChassisID';
 const data = new SlashCommandBuilder()
     .setName('chassisid')
     .setDescription('ChassisID related commands')
+    .setContexts([InteractionContextType.Guild])
     .addSubcommand(
         subcommand =>
             subcommand

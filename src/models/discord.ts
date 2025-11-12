@@ -8,6 +8,7 @@
     SlashCommandSubcommandsOnlyBuilder
 } from 'discord.js';
 import {ERROR_COLOUR} from '@constants/discord.js';
+import {Language} from "@constants/datatable.js";
 
 export interface Command {
     data: SlashCommandOptionsOnlyBuilder | SlashCommandSubcommandsOnlyBuilder;
@@ -41,7 +42,7 @@ export type ChatInputCommandInteractionExtended =
 
 export type SongValidationResult = {
     uniqueId: number;
-    lang: number;
+    lang: Language;
 }
 
 export type SearchSongResult = {

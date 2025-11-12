@@ -8,7 +8,7 @@ import {
 import {getBaidFromDiscordId} from '@database/queries/userDiscord.js';
 import {getFavouriteSongsArray, setFavouriteSongsArray} from '@database/queries/userData.js';
 import {getSongTitle} from '@utils/datatable.js';
-import {EMBED_COLOUR} from '@constants/discord.js';
+import {ALL_CONTEXTS, EMBED_COLOUR} from '@constants/discord.js';
 import {ChatInputCommandInteractionExtended, Command} from '@models/discord.js';
 
 const COMMAND_NAME = 'Favourite';
@@ -16,6 +16,7 @@ const COMMAND_NAME = 'Favourite';
 const data = new SlashCommandBuilder()
     .setName('favourite')
     .setDescription('Add/Remove Songs to Favourite Songs')
+    .setContexts(ALL_CONTEXTS)
     .addStringOption(option =>
         option.setName('song')
             .setDescription('Song name')

@@ -11,7 +11,7 @@ import {difficultyIdToName, getMaxPotentialRatingFromInternalDifficulty} from '@
 import {crownIdToEmoji, difficultyToEmoji, judgeIdToEmoji, rankIdToEmoji} from '@utils/config.js';
 import {getCostume} from '@database/queries/userData.js';
 import {createCostumeAvatar} from '@utils/costume.js';
-import {DIFFICULTY_CHOICES, EMBED_COLOUR} from '@constants/discord.js';
+import {ALL_CONTEXTS, DIFFICULTY_CHOICES, EMBED_COLOUR} from '@constants/discord.js';
 import {ChatInputCommandInteractionExtended, Command} from '@models/discord.js';
 import {getUserSongRating} from '@database/queries/rating.js';
 
@@ -20,6 +20,7 @@ const COMMAND_NAME = 'My Stats';
 const data = new SlashCommandBuilder()
     .setName('mystats')
     .setDescription(COMMAND_NAME)
+    .setContexts(ALL_CONTEXTS)
     .addStringOption(option =>
         option.setName('song')
             .setDescription('Song name')

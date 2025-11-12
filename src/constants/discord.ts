@@ -1,4 +1,5 @@
 ﻿import {Difficulty} from '@constants/datatable.js';
+import {InteractionContextType} from "discord.js";
 
 export const EMBED_COLOUR = parseInt('EB2353', 16);
 
@@ -70,3 +71,5 @@ export const BattleWinDirectionLabel = {
     [BattleWinDirection.HIGHEST]: 'Highest',
     [BattleWinDirection.LOWEST]: 'Lowest',
 };
+
+export const ALL_CONTEXTS = [InteractionContextType.Guild, InteractionContextType.BotDM, InteractionContextType.PrivateChannel]

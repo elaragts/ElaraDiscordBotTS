@@ -6,7 +6,7 @@ import {crownIdToEmoji, daniClearStateToEmoji, difficultyToEmoji, rankIdToEmoji}
 import {danIdToName} from '@utils/common.js';
 import {createCostumeAvatar} from '@utils/costume.js';
 import {CostumeData} from '@models/queries.js';
-import {EMBED_COLOUR} from '@constants/discord.js';
+import {ALL_CONTEXTS, EMBED_COLOUR} from '@constants/discord.js';
 import {ChatInputCommandInteractionExtended, Command} from '@models/discord.js';
 import {getBattleStats} from '@database/queries/battle.js';
 import {getUserRatingSummary} from '@database/queries/rating.js';
@@ -16,6 +16,7 @@ const COMMAND_NAME = 'Profile';
 const data = new SlashCommandBuilder()
     .setName('profile')
     .setDescription('User profile')
+    .setContexts(ALL_CONTEXTS)
     .addUserOption(option =>
         option.setName('user')
             .setDescription('The user to obtain the score from')

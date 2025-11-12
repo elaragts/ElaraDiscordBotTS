@@ -4,7 +4,14 @@ import {editReplyWithErrorMessage, replyWithErrorMessage} from '@utils/discord.j
 import {getMyDonName} from '@database/queries/userData.js';
 import {getPlayCount} from '@database/queries/songPlayBestData.js';
 import {format, parse, addMonths, isBefore, addDays, startOfDay, startOfMonth, endOfDay, endOfMonth} from 'date-fns';
-import {DATE_RANGE_CHOICES, DateRangeTypes, EMBED_COLOUR, GRAPH_TYPE_CHOICES, GraphTypes} from '@constants/discord.js';
+import {
+    ALL_CONTEXTS,
+    DATE_RANGE_CHOICES,
+    DateRangeTypes,
+    EMBED_COLOUR,
+    GRAPH_TYPE_CHOICES,
+    GraphTypes
+} from '@constants/discord.js';
 import {ChatInputCommandInteractionExtended, Command} from '@models/discord.js';
 import {getUserRatingBeforeDate, getUserRatingHistory} from '@database/queries/rating.js';
 import {getDateRangeFromType} from '@utils/common.js';
@@ -15,6 +22,7 @@ const COMMAND_NAME = 'Graph';
 const data = new SlashCommandBuilder()
     .setName('graph')
     .setDescription('Graph Statistics')
+    .setContexts(ALL_CONTEXTS)
     .addStringOption(
         option =>
             option.setName('type')
