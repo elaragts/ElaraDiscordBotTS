@@ -19,7 +19,7 @@ import {getLatestUserPlay, getMaxSongPlayDataId} from '@database/queries/songPla
 import {SongPlay} from '@models/queries.js';
 import {addBattle} from '@database/queries/battle.js';
 import {
-    ALL_CONTEXTS,
+    ALL_CONTEXTS, ALL_INTEGRATION_TYPES,
     BattleWinCondition,
     BattleWinConditionLabel,
     BattleWinDirection,
@@ -34,6 +34,7 @@ const data = new SlashCommandBuilder()
     .setName('battle')
     .setDescription('Battle against another user')
     .setContexts(ALL_CONTEXTS)
+    .setIntegrationTypes(ALL_INTEGRATION_TYPES)
     .addStringOption(option =>
         option.setName('song')
             .setDescription('Song name')
