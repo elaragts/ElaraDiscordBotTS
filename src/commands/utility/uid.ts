@@ -1,7 +1,7 @@
 ﻿import {SlashCommandBuilder, MessageFlags} from 'discord.js';
 import {replyWithErrorMessage, returnSongAutocomplete as autocomplete, validateSongInput} from '@utils/discord.js';
 import {getSongInfo} from '@utils/datatable.js';
-import {ALL_CONTEXTS, EMBED_COLOUR} from '@constants/discord.js';
+import {ALL_CONTEXTS, ALL_INTEGRATION_TYPES, EMBED_COLOUR} from '@constants/discord.js';
 import {Language} from '@constants/datatable.js';
 import {ChatInputCommandInteractionExtended, Command} from '@models/discord.js';
 
@@ -12,6 +12,7 @@ const data = new SlashCommandBuilder()
     .setName('uid')
     .setDescription('Get Song Id/Song from Id')
     .setContexts(ALL_CONTEXTS)
+    .setIntegrationTypes(ALL_INTEGRATION_TYPES)
     .addStringOption(option =>
         option.setName('song')
             .setDescription('Song name')

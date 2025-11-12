@@ -6,7 +6,7 @@ import {getUserRatingSummary, getUserTop50} from '@database/queries/rating.js';
 import {getSongTitle} from '@utils/datatable.js';
 import {Language} from '@constants/datatable.js';
 import {difficultyToEmoji} from '@utils/config.js';
-import {ALL_CONTEXTS, EMBED_COLOUR} from '@constants/discord.js';
+import {ALL_CONTEXTS, ALL_INTEGRATION_TYPES, EMBED_COLOUR} from '@constants/discord.js';
 import {getCostume, getMyDonName} from '@database/queries/userData.js';
 import {createCostumeAvatar} from '@utils/costume.js';
 import {getRankFromAccuracy} from '@utils/rating.js';
@@ -17,6 +17,7 @@ const data = new SlashCommandBuilder()
     .setName('b50')
     .setDescription('Get User b50')
     .setContexts(ALL_CONTEXTS)
+    .setIntegrationTypes(ALL_INTEGRATION_TYPES)
     .addUserOption(option =>
         option.setName('user')
             .setDescription('Target user')

@@ -5,7 +5,7 @@ import {crownIdToEmoji, difficultyToEmoji, rankIdToEmoji} from '@utils/config.js
 import {getDiscordIdFromBaid} from '@database/queries/userDiscord.js';
 import {getSongStars, getSongTitle} from '@utils/datatable.js';
 import {difficultyIdToName} from '@utils/common.js';
-import {ALL_CONTEXTS, DIFFICULTY_CHOICES, EMBED_COLOUR} from '@constants/discord.js';
+import {ALL_CONTEXTS, ALL_INTEGRATION_TYPES, DIFFICULTY_CHOICES, EMBED_COLOUR} from '@constants/discord.js';
 import {ChatInputCommandInteractionExtended, Command} from '@models/discord.js';
 import {PAGE_LIMIT} from '@constants/common.js';
 
@@ -15,6 +15,7 @@ const data = new SlashCommandBuilder()
     .setName('leaderboard')
     .setDescription('Song leaderboard')
     .setContexts(ALL_CONTEXTS)
+    .setIntegrationTypes(ALL_INTEGRATION_TYPES)
     .addStringOption(option =>
         option.setName('song')
             .setDescription('Song name')

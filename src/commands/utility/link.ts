@@ -2,7 +2,7 @@
 import {getBaidFromAccessCode, getBaidFromDiscordId, getDiscordIdFromBaid} from '@database/queries/userDiscord.js';
 import {replyWithErrorMessage} from '@utils/discord.js';
 import {linkDiscordToBaid} from '@database/queries/userDiscord.js';
-import {ALL_CONTEXTS, EMBED_COLOUR} from '@constants/discord.js';
+import {ALL_CONTEXTS, ALL_INTEGRATION_TYPES, EMBED_COLOUR} from '@constants/discord.js';
 import {ChatInputCommandInteractionExtended, Command} from '@models/discord.js';
 
 const COMMAND_NAME = 'Link';
@@ -11,6 +11,7 @@ const data = new SlashCommandBuilder()
     .setName('link')
     .setDescription('Links your discord account to an AccessCode')
     .setContexts(ALL_CONTEXTS)
+    .setIntegrationTypes(ALL_INTEGRATION_TYPES)
     .addStringOption(option =>
         option.setName('code')
             .setDescription('accessCode you use to login to TaikoWeb')
