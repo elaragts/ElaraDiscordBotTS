@@ -1,9 +1,9 @@
-﻿import {db} from '@database/index.js';
+﻿import {getDbSafe} from '@database/index.js';
 import type {PgError} from '@models/errors.js';
-import type {UserChassisChassisListItem, UserChassisUserListItem} from '@models/queries.js';
+import type {ChassisItem, UserChassisChassisListItem, UserChassisUserListItem} from '@models/queries.js';
 
 export async function getChassisIdFromDiscordId(discordId: string): Promise<number | undefined> {
-    const row = await db
+    const row = await getDbSafe()
         .selectFrom('chassis')
         .select(['chassis_id'])
         .where('discord_id', '=', discordId)
@@ -13,7 +13,7 @@ export async function getChassisIdFromDiscordId(discordId: string): Promise<numb
 }
 
 export async function getDiscordIdFromChassisId(chassisId: number): Promise<string | undefined> {
-    const row = await db
+    const row = await getDbSafe()
         .selectFrom('chassis')
         .select(['discord_id'])
         .where('chassis_id', '=', chassisId)
@@ -22,7 +22,7 @@ export async function getDiscordIdFromChassisId(chassisId: number): Promise<stri
 }
 
 export async function getChassisIdStatus(chassisId: number): Promise<boolean | undefined> {
-    const row = await db
+    const row = await getDbSafe()
         .selectFrom('chassis')
         .select(['active'])
         .where('chassis_id', '=', chassisId)
@@ -31,7 +31,7 @@ export async function getChassisIdStatus(chassisId: number): Promise<boolean | u
 }
 
 export async function setChassisStatus(chassisId: number, status: boolean): Promise<void> {
-    await db
+    await getDbSafe()
         .updateTable('chassis')
         .set({active: status})
         .where('chassis_id', '=', chassisId)
@@ -39,7 +39,7 @@ export async function setChassisStatus(chassisId: number, status: boolean): Prom
 }
 
 export async function deleteChassisById(chassisId: number): Promise<number> {
-    const result = await db
+    const result = await getDbSafe()
         .deleteFrom('chassis')
         .where('chassis_id', '=', chassisId)
         .executeTakeFirst();
@@ -51,7 +51,7 @@ export async function generateAndRegisterChassis(discordId: string): Promise<str
     const randomString = String(Math.floor(Math.random() * 1_000_000)).padStart(6, '0');
     const chassisId = '284111' + randomString;
     try {
-        await db
+        await getDbSafe()
             .insertInto('chassis')
             .values({
                 'chassis_id': parseInt(chassisId),
@@ -70,7 +70,7 @@ export async function generateAndRegisterChassis(discordId: string): Promise<str
 }
 
 export async function getUserChassisList(chassisId: number, offset: number): Promise<UserChassisUserListItem[]> {
-    return await db
+    return await getDbSafe()
         .selectFrom('user_chassis')
         .innerJoin('user_data', 'user_chassis.baid', 'user_data.baid')
         .leftJoin('user_discord', 'user_chassis.baid', 'user_discord.baid')
@@ -87,7 +87,7 @@ export async function getUserChassisList(chassisId: number, offset: number): Pro
 }
 
 export async function getUserUsedChassisList(baid: number, offset: number): Promise<UserChassisChassisListItem[]> {
-    return await db
+    return await getDbSafe()
         .selectFrom('user_chassis')
         .leftJoin('chassis', 'chassis.chassis_id', 'user_chassis.chassis_id')
         .select([
@@ -99,4 +99,13 @@ export async function getUserUsedChassisList(baid: number, offset: number): Prom
         .limit(10)
         .offset(offset)
         .execute();
+}
+
+export async function getAllActiveChassis(): Promise<ChassisItem[]> {
+    return await getDbSafe()
+        .selectFrom('chassis')
+        .selectAll()
+        .where('active', '=', true)
+        .execute();
+
 }

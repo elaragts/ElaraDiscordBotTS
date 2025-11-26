@@ -74,6 +74,12 @@ export type UserChassisChassisListItem = {
     last_used: Date;
 }
 
+export type ChassisItem = {
+    active: boolean;
+    chassis_id: number;
+    discord_id: string;
+}
+
 export type BattleStats = {
     total_battles: number;
     battles_won: number;

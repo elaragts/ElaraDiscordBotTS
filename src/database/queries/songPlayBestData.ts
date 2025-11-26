@@ -1,11 +1,11 @@
-﻿import {db} from '@database/index.js';
-import type {LeaderboardEntry, MonthlyPlayCount, SongPlay} from '@models/queries.js';
+﻿import {getDbSafe} from '@database/index.js';
+import type {LeaderboardEntry, SongPlay} from '@models/queries.js';
 import {sql} from 'kysely';
 import {Difficulty} from '@constants/datatable.js';
 import {PAGE_LIMIT, QueryGranularity} from '@constants/common.js';
 
 export async function getLeaderboard(uniqueId: number, difficulty: number, offset: number): Promise<LeaderboardEntry[]> {
-    return await db
+    return await getDbSafe()
         .selectFrom('song_best_data as sbd')
         .innerJoin('user_data as ud', 'sbd.baid', 'ud.baid')
         .select([
@@ -24,7 +24,7 @@ export async function getLeaderboard(uniqueId: number, difficulty: number, offse
 }
 
 export async function getBestScore(uniqueId: number, difficulty: number, baid: number) {
-    const score = await db
+    const score = await getDbSafe()
         .with('count_cte', (qb) =>
             qb
                 .selectFrom('song_play_data')
@@ -58,7 +58,7 @@ export async function getBestScore(uniqueId: number, difficulty: number, baid: n
 
     if (!score) return undefined;
 
-    const ret = await db
+    const ret = await getDbSafe()
         .selectFrom('song_play_data as spd')
         .innerJoin('user_data as ud', 'spd.baid', 'ud.baid')
         .innerJoin('card as c', 'spd.baid', 'c.baid')
@@ -117,7 +117,7 @@ export async function getPlayCount(
             throw new Error('Unsupported granularity');
     }
 
-    let query = db
+    let query = getDbSafe()
         .selectFrom('song_play_data')
         .select([
             sql<string>`TO_CHAR(play_time, ${sql.raw(`'${dateFormat}'`)})`.as('period'),
@@ -140,7 +140,7 @@ export async function getPlayCount(
 
 
 export async function getMaxSongPlayDataId(): Promise<number> {
-    const row = await db
+    const row = await getDbSafe()
         .selectFrom('song_play_data')
         .select(({fn}) => fn.max('id').as('max_id'))
         .executeTakeFirst();
@@ -148,7 +148,7 @@ export async function getMaxSongPlayDataId(): Promise<number> {
 }
 
 export async function getLatestUserPlay(baid: number, uniqueId: number, difficulty: Difficulty): Promise<SongPlay | undefined> {
-    const result = await db
+    const result = await getDbSafe()
         .selectFrom('song_play_data')
         .select([
             'id',
