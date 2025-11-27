@@ -4,6 +4,8 @@ import {generateAndRegisterChassis, getChassisIdFromDiscordId} from '@database/q
 import {replyWithErrorMessage} from '@utils/discord.js';
 import {EMBED_COLOUR} from '@constants/discord.js';
 import {ChatInputCommandInteractionExtended, Command} from '@models/discord.js';
+import {insertModLog} from "@database/queries/modlog.js";
+import {EGTS_BOT_MOD_USER_ID, ModlogTypes} from "@constants/modlog.js";
 
 const COMMAND_NAME = 'ChassisID';
 
@@ -37,6 +39,13 @@ async function execute(interaction: ChatInputCommandInteractionExtended) {
             return;
         }
         const newChassisId = await generateAndRegisterChassis(user.id);
+        await insertModLog({
+            action_type: ModlogTypes.GENERATE_CHASSISID,
+            mod_user_id: EGTS_BOT_MOD_USER_ID,
+            target_user_id: user.id,
+            target_chassis_id: parseInt(newChassisId),
+            reason: '/chassisid request used'
+        });
         await interaction.reply({
             embeds: [{
                 title: 'Successfully registered ChassisID',

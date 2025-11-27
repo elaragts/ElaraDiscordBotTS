@@ -90,3 +90,11 @@ export type BattleLog = {
     winner_baid: number;
     battle_at: Date;
 }
+
+export type InsertModLog = {
+    action_type: string;
+    mod_user_id: string;
+    target_user_id: string;
+    reason?: string | null;
+    target_chassis_id?: number | null;
+}

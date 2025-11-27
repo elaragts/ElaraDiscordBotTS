@@ -3,6 +3,8 @@ import config from '#config' with {type: 'json'};
 import {getChassisIdFromDiscordId, getChassisIdStatus, setChassisStatus} from "@database/queries/chassis.js";
 import {client} from "@bot/client.js";
 import logger from "@utils/logger.js";
+import {insertModLog} from "@database/queries/modlog.js";
+import {EGTS_BOT_MOD_USER_ID, ModlogTypes} from "@constants/modlog.js";
 
 export async function handleEgtsGuildMemberRemove(guildMember: GuildMember | PartialGuildMember) {
     await disableChassisIfActive(guildMember.id, 'Left server');
@@ -26,6 +28,13 @@ async function disableChassisIfActive(memberId: string, reason: string) {
     }
 
     await setChassisStatus(chassisId, false);
+    await insertModLog({
+        action_type: ModlogTypes.DISABLE_CHASSISID,
+        mod_user_id: EGTS_BOT_MOD_USER_ID,
+        target_user_id: memberId,
+        target_chassis_id: chassisId,
+        reason: 'Donder role removed'
+    });
 
     const channel = client.channels.cache.get(config.modlogChannelId);
     if (channel === undefined || !(channel instanceof TextChannel)) {
@@ -51,6 +60,14 @@ async function enableChassisIfDisabled(memberId: string, reason: string) {
         return;
     }
     await setChassisStatus(chassisId, true);
+    await insertModLog({
+        action_type: ModlogTypes.ENABLE_CHASSISID,
+        mod_user_id: EGTS_BOT_MOD_USER_ID,
+        target_user_id: memberId,
+        target_chassis_id: chassisId,
+        reason: 'Donder role added'
+    });
+
     if (invalidChannel) {
         logger.error({}, 'Invalid modlog channel');
         return;

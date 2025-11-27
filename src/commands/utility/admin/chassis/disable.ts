@@ -6,6 +6,8 @@
 import {replyWithErrorMessage} from '@utils/discord.js';
 import {ChatInputCommandInteraction} from 'discord.js';
 import {EMBED_COLOUR} from '@constants/discord.js';
+import {insertModLog} from "@database/queries/modlog.js";
+import {ModlogTypes} from "@constants/modlog.js";
 
 const COMMAND_NAME = 'Disable ChassisID';
 
@@ -30,6 +32,14 @@ export async function execute(interaction: ChatInputCommandInteraction) {
         return await replyWithErrorMessage(interaction, COMMAND_NAME, 'ChassisID or user option required');
     }
     await setChassisStatus(chassisId, false);
+    await insertModLog({
+        action_type: ModlogTypes.DISABLE_CHASSISID,
+        mod_user_id: interaction.user.id,
+        target_user_id: discordId,
+        target_chassis_id: chassisId,
+        reason: '/admin chassisid disable used'
+    });
+
     const returnEmbed = {
         description: `Disabled <@${discordId}>'s ChassisID \`${chassisId}\``,
         color: EMBED_COLOUR,

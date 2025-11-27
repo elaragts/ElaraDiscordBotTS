@@ -3,6 +3,8 @@ import {client} from "@bot/client.js";
 import config from '#config' with {type: 'json'};
 import {TextChannel} from "discord.js";
 import logger from "@utils/logger.js";
+import {insertModLog} from "@database/queries/modlog.js";
+import {EGTS_BOT_MOD_USER_ID, ModlogTypes} from "@constants/modlog.js";
 
 export async function runChassisSweep() {
     const start = Date.now();
@@ -20,6 +22,14 @@ export async function runChassisSweep() {
                 continue;
             }
             await setChassisStatus(chassisItem.chassis_id, false);
+
+            await insertModLog({
+                action_type: ModlogTypes.DISABLE_CHASSISID,
+                mod_user_id: EGTS_BOT_MOD_USER_ID,
+                target_user_id: member.id,
+                target_chassis_id: chassisItem.chassis_id,
+                reason: 'Disable Chassis Sweep'
+            });
 
             if (channel && channel instanceof TextChannel) {
                 await channel.send({
