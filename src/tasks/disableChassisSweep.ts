@@ -10,23 +10,30 @@ export async function runChassisSweep() {
     const start = Date.now();
     logger.info(`[TASK] disableChassisSweep | Starting Disable Chassis Sweep`);
     try {
-        const guild = client.guilds.cache.get(config.guildId)!;
-
+        const guild = await client.guilds.fetch(config.guildId);
+        const members = guild.members.cache;
         const channel = client.channels.cache.get(config.modlogChannelId);
 
         const activeChassis = await getAllActiveChassis();
         let count = 0;
         for (const chassisItem of activeChassis) {
-            const member = await guild.members.fetch(chassisItem.discord_id);
-            if (member && member.roles.cache.has(config.donderRoleId)) {
+            if (/\D/.test(chassisItem.discord_id)) {
+                logger.info(`[TASK] disableChassisSweep | DiscordID ${chassisItem.discord_id} contains non-numeric characters, skipping...`)
                 continue;
             }
+            if (members.has(chassisItem.discord_id)) {
+                const member = await guild.members.fetch(chassisItem.discord_id);
+                if (member && member.roles.cache.has(config.donderRoleId)) {
+                    continue;
+                }
+            }
+
             await setChassisStatus(chassisItem.chassis_id, false);
 
             await insertModLog({
                 action_type: ModlogTypes.DISABLE_CHASSISID,
                 mod_user_id: EGTS_BOT_MOD_USER_ID,
-                target_user_id: member.id,
+                target_user_id: chassisItem.discord_id,
                 target_chassis_id: chassisItem.chassis_id,
                 reason: 'Disable Chassis Sweep'
             });
