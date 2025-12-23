@@ -1,8 +1,8 @@
-﻿import {db} from '@database/index.js';
+﻿import {getDbSafe} from '@database/index.js';
 import {Difficulty} from "@constants/datatable.js";
 
 export async function getUserTop50(baid: number) {
-    return await db
+    return await getDbSafe()
         .selectFrom('user_top_50')
         .selectAll()
         .where('baid', '=', baid)
@@ -12,7 +12,7 @@ export async function getUserTop50(baid: number) {
 }
 
 export async function getUserRatingSummary(baid: number) {
-    return await db
+    return await getDbSafe()
         .selectFrom('user_rating_summary')
         .selectAll()
         .where('baid', '=', baid)
@@ -24,7 +24,7 @@ export async function getUserRatingHistory(
     startDate?: Date,
     endDate?: Date
 ) {
-    let query = db
+    let query = getDbSafe()
         .selectFrom('user_rating_history')
         .selectAll()
         .where('baid', '=', baid);
@@ -43,7 +43,7 @@ export async function getUserRatingHistory(
 }
 
 export async function getUserRatingBeforeDate(baid: number, date: Date) {
-    const result =  await db
+    const result =  await getDbSafe()
         .selectFrom('user_rating_history')
         .select('rating')
         .where((eb) => eb.and([
@@ -56,7 +56,7 @@ export async function getUserRatingBeforeDate(baid: number, date: Date) {
 }
 
 export async function getUserSongRating(baid: number, song_id: number, difficulty: Difficulty) {
-    const result = await db
+    const result = await getDbSafe()
         .selectFrom('user_song_rate')
         .select('song_rate')
         .where((eb) => eb.and([

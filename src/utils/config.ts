@@ -42,9 +42,12 @@ export function validateConfig(): Record<string, any> {
     const expectedSchema: Record<string, 'string' | 'object'> = {
         guildId: 'string',
         botChannelId: 'string',
+        modlogChannelId: 'string',
+        donderRoleId: 'string',
         musicinfoPath: 'string',
         wordlistPath: 'string',
         internalDifficultyDataPath: 'string',
+        tasks: 'object',
         spritesPath: 'string',
         serverBoostRoleId: 'string',
         adminRoleId: 'string',

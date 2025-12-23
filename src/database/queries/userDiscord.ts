@@ -1,7 +1,7 @@
-﻿import {db} from '@database/index.js';
+﻿import {getDbSafe} from '@database/index.js';
 
 export async function getBaidFromAccessCode(accessCode: string): Promise<number | undefined> {
-    const row = await db
+    const row = await getDbSafe()
         .selectFrom('card')
         .select(['baid'])
         .where('access_code', '=', accessCode)
@@ -11,7 +11,7 @@ export async function getBaidFromAccessCode(accessCode: string): Promise<number 
 }
 
 export async function getBaidFromDiscordId(discordId: string): Promise<number | undefined> {
-    const row = await db
+    const row = await getDbSafe()
         .selectFrom('user_discord')
         .select(['baid'])
         .where('discord_id', '=', discordId)
@@ -21,7 +21,7 @@ export async function getBaidFromDiscordId(discordId: string): Promise<number | 
 }
 
 export async function getDiscordIdFromBaid(baid: number): Promise<string | undefined> {
-    const row = await db
+    const row = await getDbSafe()
         .selectFrom('user_discord')
         .select(['discord_id'])
         .where('baid', '=', baid)
@@ -31,7 +31,7 @@ export async function getDiscordIdFromBaid(baid: number): Promise<string | undef
 }
 
 export async function linkDiscordToBaid(discordId: string, baid: number): Promise<void> {
-    await db
+    await getDbSafe()
         .insertInto('user_discord')
         .values({
             baid: baid,
@@ -41,7 +41,7 @@ export async function linkDiscordToBaid(discordId: string, baid: number): Promis
 }
 
 export async function unlinkDiscordFromBaid(discordId: string): Promise<void> {
-    await db
+    await getDbSafe()
         .deleteFrom('user_discord')
         .where('discord_id', '=', discordId)
         .executeTakeFirst();

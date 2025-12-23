@@ -2,14 +2,16 @@
     AutocompleteInteraction,
     ChatInputCommandInteraction,
     Collection,
-    Events,
+    Events, GuildMember,
     InteractionContextType,
-    MessageFlags
+    MessageFlags, PartialGuildMember
 } from 'discord.js';
 import {Command, ClientExtended} from '@models/discord.js';
 import path from 'node:path';
 import { readdir } from "fs/promises";
 import logger from '@utils/logger.js';
+import config from '#config' with {type: 'json'};
+
 import {
     getExtendedClient,
     getExtendedChatInputCommandInteraction,
@@ -17,13 +19,19 @@ import {
     replyWithErrorMessage
 } from '@utils/discord.js';
 import {fileURLToPath} from 'url';
+import {handleEgtsGuildMemberRemove, handleEgtsGuildMemberUpdate} from "../events/egtsGuildEvents.js";
+import {startTasks} from "../tasks/index.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 export async function registerHandlers(client: ClientExtended) {
-    client.once(Events.ClientReady, readyClient => {
+    client.once(Events.ClientReady, async readyClient =>{
         logger.info(`Ready! Logged in as ${readyClient.user.tag} in ${readyClient.guilds.cache.size} guilds`);
+
+        await readyClient.guilds.cache.get(config.guildId)?.members.fetch(); //cache EGTS discord members
+
+        await startTasks();
     });
 
     client.on(Events.InteractionCreate, async interaction => {
@@ -34,6 +42,14 @@ export async function registerHandlers(client: ClientExtended) {
             logger.error(err);
         }
     });
+
+    client.on(Events.GuildMemberRemove, async guildMember => {
+        await handleGuildMemberRemove(guildMember);
+    })
+
+    client.on(Events.GuildMemberUpdate, async (oldGuildMember, newGuildMember) => {
+        await handleGuildMemberUpdate(oldGuildMember, newGuildMember);
+    })
 
     client.commands = new Collection();
     const foldersPath = path.join(__dirname, "..", "commands");
@@ -112,5 +128,17 @@ async function handleAutocomplete(interaction: AutocompleteInteraction) {
         await command.autocomplete(interaction);
     } catch (err) {
         logger.error({err: err}, `There was an error while executing ${interaction.commandName} autocomplete handler`);
+    }
+}
+
+async function handleGuildMemberRemove(guildMember: GuildMember | PartialGuildMember) {
+    if (guildMember.guild.id === config.guildId) {
+        await handleEgtsGuildMemberRemove(guildMember);
+    }
+}
+
+async function handleGuildMemberUpdate(oldGuildMember: GuildMember | PartialGuildMember, guildMember: GuildMember) {
+    if (guildMember.guild.id === config.guildId) {
+        await handleEgtsGuildMemberUpdate(oldGuildMember, guildMember);
     }
 }

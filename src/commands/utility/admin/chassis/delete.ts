@@ -1,12 +1,13 @@
 ﻿import {
     deleteChassisById,
     getChassisIdFromDiscordId,
-    getDiscordIdFromChassisId,
-    setChassisStatus
+    getDiscordIdFromChassisId
 } from '@database/queries/chassis.js';
 import {replyWithErrorMessage} from '@utils/discord.js';
 import {ActionRowBuilder, ButtonBuilder, ButtonStyle, ChatInputCommandInteraction, MessageFlags} from 'discord.js';
 import {EMBED_COLOUR} from '@constants/discord.js';
+import {insertModLog} from "@database/queries/modlog.js";
+import {ModlogTypes} from "@constants/modlog.js";
 
 const COMMAND_NAME = 'Delete ChassisID';
 
@@ -31,7 +32,6 @@ export async function execute(interaction: ChatInputCommandInteraction) {
         return await replyWithErrorMessage(interaction, COMMAND_NAME, 'ChassisID or user option required');
     }
 
-    await setChassisStatus(chassisId, true);
     const confirmEmbed = {
         description: `Are you sure you want to delete <@${discordId}>'s ChassisID \`${chassisId}\`?\nThis will allow the user to register a new chassisID`,
         color: 15410003,
@@ -65,6 +65,13 @@ export async function execute(interaction: ChatInputCommandInteraction) {
         }
         if (i.customId === 'confirm') {
             const result = await deleteChassisById(chassisId);
+            await insertModLog({
+                action_type: ModlogTypes.DELETE_CHASSISID,
+                mod_user_id: interaction.user.id,
+                target_user_id: discordId,
+                target_chassis_id: chassisId,
+                reason: '/admin chassisid delete used'
+            });
             if (result > 0) {
                 await interaction.editReply({
                     embeds: [{
