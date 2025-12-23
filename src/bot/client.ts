@@ -5,6 +5,7 @@ export const client = new ClientExtended({
     intents: [
         GatewayIntentBits.Guilds,
         GatewayIntentBits.GuildMembers,
+        GatewayIntentBits.GuildPresences,
         GatewayIntentBits.DirectMessages,
         GatewayIntentBits.MessageContent
     ]
