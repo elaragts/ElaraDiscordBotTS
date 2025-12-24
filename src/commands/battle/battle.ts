@@ -15,7 +15,7 @@ import {getBaidFromDiscordId} from '@database/queries/userDiscord.js';
 import {getFavouriteSongsArray, getMyDonName, setFavouriteSongsArray} from '@database/queries/userData.js';
 import {getSongNoteCount, getSongStars, getSongTitle} from '@utils/datatable.js';
 import {crownIdToEmoji, difficultyToEmoji, judgeIdToEmoji, rankIdToEmoji} from '@utils/config.js';
-import {getLatestUserPlay, getMaxSongPlayDataId} from '@database/queries/songPlayBestData.js';
+import {getSongLatestUserPlay, getMaxSongPlayDataId} from '@database/queries/songPlayBestData.js';
 import {SongPlay} from '@models/queries.js';
 import {addBattle} from '@database/queries/battle.js';
 import {
@@ -294,7 +294,7 @@ async function execute(interaction: ChatInputCommandInteractionExtended) {
                 return;
             }
             const baid = (await getBaidFromDiscordId(i.user.id))!;
-            const songPlay = await getLatestUserPlay(baid, uniqueId, difficulty);
+            const songPlay = await getSongLatestUserPlay(baid, uniqueId, difficulty);
             if (songPlay === undefined || songPlay.id <= minSongPlayId) {
                 await i.reply({content: 'No score submitted', flags: MessageFlags.Ephemeral});
                 return;

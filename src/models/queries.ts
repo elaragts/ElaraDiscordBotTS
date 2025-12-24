@@ -51,6 +51,8 @@ export type UserProfile = {
 
 export type SongPlay = {
     id: number;
+    song_id: number;
+    difficulty: number;
     combo_count: number;
     crown: number;
     drumroll_count: number;

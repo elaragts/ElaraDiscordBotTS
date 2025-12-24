@@ -147,11 +147,13 @@ export async function getMaxSongPlayDataId(): Promise<number> {
     return row?.max_id || 0;
 }
 
-export async function getLatestUserPlay(baid: number, uniqueId: number, difficulty: Difficulty): Promise<SongPlay | undefined> {
+export async function getSongLatestUserPlay(baid: number, uniqueId: number, difficulty: Difficulty): Promise<SongPlay | undefined> {
     const result = await getDbSafe()
         .selectFrom('song_play_data')
         .select([
             'id',
+            'song_id',
+            'difficulty',
             'score',
             'score_rank',
             'crown',
@@ -164,7 +166,32 @@ export async function getLatestUserPlay(baid: number, uniqueId: number, difficul
         .where('baid', '=', baid)
         .where('song_id', '=', uniqueId)
         .where('difficulty', '=', difficulty)
-        .orderBy('id', 'desc')
+        .orderBy('play_time', 'desc')
+        .executeTakeFirst();
+
+    return result ? {...result, accuracy: 0} : undefined
+}
+
+export async function getLatestUserPlay(baid: number, offset: number): Promise<SongPlay | undefined> {
+    const result = await getDbSafe()
+        .selectFrom('song_play_data')
+        .select([
+            'id',
+            'song_id',
+            'difficulty',
+            'score',
+            'score_rank',
+            'crown',
+            'good_count',
+            'ok_count',
+            'miss_count',
+            'drumroll_count',
+            'combo_count'
+        ])
+        .where('baid', '=', baid)
+        .orderBy('play_time', 'desc')
+        .limit(1)
+        .offset(offset)
         .executeTakeFirst();
 
     return result ? {...result, accuracy: 0} : undefined
