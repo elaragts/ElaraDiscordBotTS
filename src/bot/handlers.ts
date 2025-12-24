@@ -18,7 +18,7 @@ import {
     safeGetSubcommand,
     replyWithErrorMessage
 } from '@utils/discord.js';
-import {fileURLToPath} from 'url';
+import {fileURLToPath, pathToFileURL} from 'url';
 import {handleEgtsGuildMemberRemove, handleEgtsGuildMemberUpdate} from "../events/egtsGuildEvents.js";
 import {startTasks} from "../tasks/index.js";
 
@@ -61,7 +61,7 @@ export async function registerHandlers(client: ClientExtended) {
 
         for (const file of commandFiles) {
             const filePath = path.join(commandsPath, file);
-            const module = await import(filePath);
+            const module = await import(pathToFileURL(filePath).href);
             const command: Command = module.command;
 
             if (command) {
