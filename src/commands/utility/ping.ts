@@ -1,11 +1,12 @@
 ﻿import {SlashCommandBuilder} from 'discord.js';
 import {ChatInputCommandInteractionExtended, Command} from '@models/discord.js';
-import {ALL_CONTEXTS} from "@constants/discord.js";
+import {ALL_CONTEXTS, ALL_INTEGRATION_TYPES} from "@constants/discord.js";
 
 const data = new SlashCommandBuilder()
     .setName('ping')
     .setDescription('Replies with Pong!')
-    .setContexts(ALL_CONTEXTS);
+    .setContexts(ALL_CONTEXTS)
+    .setIntegrationTypes(ALL_INTEGRATION_TYPES);
 async function execute(interaction: ChatInputCommandInteractionExtended) {
     await interaction.reply('Pong!');
 }

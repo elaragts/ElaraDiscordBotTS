@@ -1,9 +1,9 @@
-﻿import {db} from '@database/index.js';
+﻿import {getDbSafe} from '@database/index.js';
 import type {BattleLog, BattleStats} from '@models/queries.js';
 import {PAGE_LIMIT} from '@constants/common.js';
 
 export async function addBattle(uniqueId: number, baidOne: number, baidTwo: number, winner: number) {
-    await db.insertInto('battle')
+    await getDbSafe().insertInto('battle')
         .values({
             'song_number': uniqueId,
             'player_one_baid': baidOne,
@@ -37,12 +37,12 @@ export async function getBattleStats(
         return base;
     };
 
-    const totalBattlesQuery = db
+    const totalBattlesQuery = getDbSafe()
         .selectFrom('battle')
         .select(({fn}) => fn.countAll().as('total_battles'))
         .where(battleConditions);
 
-    const totalWinsQuery = db
+    const totalWinsQuery = getDbSafe()
         .selectFrom('battle')
         .select(({fn}) => fn.countAll().as('total_wins'))
         .where((eb) => {
@@ -61,7 +61,7 @@ export async function getBattleStats(
             return base;
         });
 
-    const result = await db
+    const result = await getDbSafe()
         .selectFrom([
             totalBattlesQuery.as('battles_count'),
             totalWinsQuery.as('wins_count'),
@@ -86,7 +86,7 @@ export async function getLatestBattles(
 ): Promise<BattleLog[]> {
     const { opponentBaid, offset = 0 } = options ?? {};
 
-    const query = db
+    const query = getDbSafe()
         .selectFrom('battle')
         .select([
             'winner_baid',

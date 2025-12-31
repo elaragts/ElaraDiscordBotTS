@@ -1,10 +1,10 @@
-﻿import {db} from '@database/index.js';
+﻿import {getDbSafe} from '@database/index.js';
 import type {CostumeData, UserProfile} from '@models/queries.js';
 import {sql} from 'kysely';
 import type {QueryResult} from 'pg';
 
 export async function getFavouriteSongsArray(baid: number): Promise<number[] | undefined> {
-    const row = await db
+    const row = await getDbSafe()
         .selectFrom('user_data')
         .select(['favorite_songs_array'])
         .where('baid', '=', baid)
@@ -14,7 +14,7 @@ export async function getFavouriteSongsArray(baid: number): Promise<number[] | u
 }
 
 export async function setFavouriteSongsArray(baid: number, songArray: number[]): Promise<void> {
-    await db
+    await getDbSafe()
         .updateTable('user_data')
         .set({'favorite_songs_array': songArray})
         .where('baid', '=', baid)
@@ -22,7 +22,7 @@ export async function setFavouriteSongsArray(baid: number, songArray: number[]):
 }
 
 export async function getCostume(baid: number): Promise<CostumeData | undefined> {
-    return await db
+    return await getDbSafe()
         .selectFrom('user_data')
         .select([
             'current_body',
@@ -124,14 +124,14 @@ export async function getUserProfile(baid: number): Promise<UserProfile | undefi
                      LEFT JOIN play_count_cte pc ON ud.baid = pc.baid
                      LEFT JOIN dan_cte d ON ud.baid = d.baid
             WHERE ud.baid = ${baid}
-        `.execute(db) as QueryResult<UserProfile>;
+        `.execute(getDbSafe()) as QueryResult<UserProfile>;
     return result.rows.length > 0 ? result.rows[0] : undefined;
 
 
 }
 
 export async function getMyDonName(baid: number): Promise<string | undefined> {
-    const row = await db
+    const row = await getDbSafe()
         .selectFrom('user_data')
         .select(['my_don_name'])
         .where('baid', '=', baid)
@@ -142,7 +142,7 @@ export async function getMyDonName(baid: number): Promise<string | undefined> {
 }
 
 export async function doesBaidExist(baid: number): Promise<boolean> {
-    const result = await db
+    const result = await getDbSafe()
         .selectFrom('user_data')
         .select('baid')
         .where('baid', '=', baid)

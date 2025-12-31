@@ -28,7 +28,7 @@ export async function initializeDatabase() {
     };
 
     db = new Kysely<DB>({
-        dialect: new PostgresDialect({ pool: new Pool(dbConfig) }),
+        dialect: new PostgresDialect({pool: new Pool(dbConfig)}),
     });
 
     const client = new Client(dbConfig);
@@ -45,4 +45,11 @@ export async function initializeDatabase() {
     client.on('error', err => {
         logger.error({ err }, 'Database listener error');
     });
+}
+
+export function getDbSafe(): Kysely<DB> {
+    if (db === null) {
+        throw new Error("Database has not been initialized yet.");
+    }
+    return db;
 }

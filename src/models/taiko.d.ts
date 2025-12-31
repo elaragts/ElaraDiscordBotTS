@@ -100,6 +100,16 @@ export interface DanStageScoreData {
     total_hit_count: Int8;
 }
 
+export interface ModLog {
+    action_type: string;
+    created_at: Generated<Timestamp>;
+    id: Generated<Int8>;
+    mod_user_id: string;
+    reason: string | null;
+    target_chassis_id: Numeric | null;
+    target_user_id: string;
+}
+
 export interface SongBestData {
     baid: Int8;
     best_crown: number;
@@ -231,6 +241,7 @@ export interface DB {
     credential: Credential;
     dan_score_data: DanScoreData;
     dan_stage_score_data: DanStageScoreData;
+    mod_log: ModLog;
     song_best_data: SongBestData;
     song_play_data: SongPlayData;
     token: Token;

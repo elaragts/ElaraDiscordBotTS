@@ -1,7 +1,7 @@
 ﻿import {SlashCommandBuilder, MessageFlags} from 'discord.js';
 import {getBaidFromDiscordId, unlinkDiscordFromBaid} from '@database/queries/userDiscord.js';
 import {replyWithErrorMessage} from '@utils/discord.js';
-import {ALL_CONTEXTS, EMBED_COLOUR} from '@constants/discord.js';
+import {ALL_CONTEXTS, ALL_INTEGRATION_TYPES, EMBED_COLOUR} from '@constants/discord.js';
 import {ChatInputCommandInteractionExtended, Command} from '@models/discord.js';
 
 const COMMAND_NAME = 'Unlink';
@@ -9,7 +9,8 @@ const COMMAND_NAME = 'Unlink';
 const data = new SlashCommandBuilder()
     .setName('unlink')
     .setDescription('Unlinks your discord account to an AccessCode')
-    .setContexts(ALL_CONTEXTS);
+    .setContexts(ALL_CONTEXTS)
+    .setIntegrationTypes(ALL_INTEGRATION_TYPES);
 
 async function execute(interaction: ChatInputCommandInteractionExtended) {
     const user = interaction.user;

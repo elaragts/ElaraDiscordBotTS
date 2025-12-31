@@ -19,7 +19,7 @@ import {getLatestUserPlay, getMaxSongPlayDataId} from '@database/queries/songPla
 import {SongPlay} from '@models/queries.js';
 import {addBattle} from '@database/queries/battle.js';
 import {
-    ALL_CONTEXTS,
+    ALL_CONTEXTS, ALL_INTEGRATION_TYPES,
     BattleWinCondition,
     BattleWinConditionLabel,
     BattleWinDirection,
@@ -28,12 +28,14 @@ import {
     EMBED_COLOUR
 } from '@constants/discord.js';
 import type {ChatInputCommandInteractionExtended, Command} from '@models/discord.js';
+import logger from "@utils/logger.js";
 
 const COMMAND_NAME = 'Battle';
 const data = new SlashCommandBuilder()
     .setName('battle')
     .setDescription('Battle against another user')
     .setContexts(ALL_CONTEXTS)
+    .setIntegrationTypes(ALL_INTEGRATION_TYPES)
     .addStringOption(option =>
         option.setName('song')
             .setDescription('Song name')
@@ -310,8 +312,20 @@ async function execute(interaction: ChatInputCommandInteractionExtended) {
         });
 
         submissionCollector.on('end', async (_, reason) => {
-            await setFavouriteSongsArray(baidOne, client.playerFavouriteSongs.get(baidOne)!);
-            await setFavouriteSongsArray(baidTwo, client.playerFavouriteSongs.get(baidTwo)!);
+            let favouriteSongsOne = client.playerFavouriteSongs.get(baidOne) ?? [];
+            if (favouriteSongsOne.some(e => !Number.isFinite(e))) {
+                logger.warn(`Favourite songs array contains invalid number(s): ${favouriteSongsOne}`);
+                favouriteSongsOne = favouriteSongsOne
+                    .filter(e => Number.isFinite(e));
+            }
+            let favouriteSongsTwo = client.playerFavouriteSongs.get(baidTwo) ?? [];
+            if (favouriteSongsTwo.some(e => !Number.isFinite(e))) {
+                logger.warn(`Favourite songs array contains invalid number(s): ${favouriteSongsTwo}`);
+                favouriteSongsTwo = favouriteSongsTwo
+                    .filter(e => Number.isFinite(e));
+            }
+            await setFavouriteSongsArray(baidOne, favouriteSongsOne);
+            await setFavouriteSongsArray(baidTwo, favouriteSongsTwo);
             client.playerFavouriteSongs.delete(baidOne);
             client.playerFavouriteSongs.delete(baidTwo);
             client.ongoingBattles.delete(userOne.id);
