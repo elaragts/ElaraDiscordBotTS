@@ -69,7 +69,7 @@ async function execute(interaction: ChatInputCommandInteractionExtended) {
         const rank = getRankFromAccuracy(accuracy);
 
         // @ts-ignore
-        description += `${i + 1}. ${difficultyToEmoji(parseInt(entry.external_difficulty))}\`${getSongTitle(entry.song_id, Language.JAPANESE)}\`: ${rank} (${accuracyPercent}%) - ${weightedStr}/${rateRaw}\n`;
+        description += `${i + 1}. ${difficultyToEmoji(parseInt(entry.external_difficulty))}\`${getSongTitle(entry.song_id, Language.JAPANESE)}\`: ${rank} (${accuracyPercent}%) - ${weightedStr} (${rateRaw})\n`;
     }
 
     const avatar = await createCostumeAvatar((await getCostume(baid))!);
