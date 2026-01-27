@@ -15,8 +15,7 @@ yarn-error.log*
 config.json
 musicinfo.json
 wordlist.json
+internal_difficulty_data.json
 
 **/.DS_Store
 .env
-
-internal_difficulty_data.json
