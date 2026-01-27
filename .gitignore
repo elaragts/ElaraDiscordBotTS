@@ -19,3 +19,4 @@ wordlist.json
 **/.DS_Store
 .env
 
+internal_difficulty_data.json

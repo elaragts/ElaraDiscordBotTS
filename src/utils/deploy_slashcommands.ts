@@ -3,7 +3,7 @@ import config from '#config' with {type: 'json'};
 import {command as adminCommand} from '../commands/utility/admin/index.js';
 import fs from 'node:fs';
 import path from 'node:path';
-import {fileURLToPath} from 'node:url';
+import {fileURLToPath, pathToFileURL} from 'node:url';
 import dotenv from 'dotenv';
 import {Command} from '@models/discord.js';
 
@@ -35,7 +35,7 @@ for (const folder of commandFolders) {
         }
 
         // Dynamically import ESM module
-        const module = await import(filePath);
+        const module = await import(pathToFileURL(filePath).href);
         const command: Command = module.command;
 
         if (command) {
