@@ -43,6 +43,7 @@ export function validateConfig(): Record<string, any> {
         guildId: 'string',
         botChannelId: 'string',
         modlogChannelId: 'string',
+        introductionChannelId: 'string',
         donderRoleId: 'string',
         musicinfoPath: 'string',
         wordlistPath: 'string',

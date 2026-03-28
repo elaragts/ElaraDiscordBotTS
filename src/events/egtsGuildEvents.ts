@@ -1,10 +1,20 @@
-import {GuildMember, PartialGuildMember, TextChannel} from "discord.js";
+import {
+    GuildMember,
+    MessageReaction,
+    PartialGuildMember,
+    PartialMessageReaction,
+    PartialUser,
+    TextChannel,
+    User
+} from "discord.js";
 import config from '#config' with {type: 'json'};
 import {getChassisIdFromDiscordId, getChassisIdStatus, setChassisStatus} from "@database/queries/chassis.js";
 import {client} from "@bot/client.js";
 import logger from "@utils/logger.js";
 import {insertModLog} from "@database/queries/modlog.js";
 import {EGTS_BOT_MOD_USER_ID, ModlogTypes} from "@constants/modlog.js";
+import {addRoleToGuildMember} from "@utils/discord.js";
+import {EMBED_COLOUR} from "@constants/discord.js";
 
 export async function handleEgtsGuildMemberRemove(guildMember: GuildMember | PartialGuildMember) {
     await disableChassisIfActive(guildMember.id, 'Left server');
@@ -75,4 +85,46 @@ async function enableChassisIfDisabled(memberId: string, reason: string) {
     await channel.send({
         content: `Enabled <@${memberId}>'s ChassisID \`${chassisId}\` REASON: ${reason}`
     });
+}
+
+export async function handleEgtsMessageReactionAdd(reaction: MessageReaction | PartialMessageReaction, user: User | PartialUser) {
+    if (reaction.message.channel.id === config.introductionChannelId
+        && config.whitelistedAdmins.includes(user.id)
+        && (reaction.emoji.name === "👋" || reaction.emoji.name === "👍")
+    ) {
+        const targetId = reaction.message.author!.id
+        const guild = client.guilds.cache.get(config.guildId)!;
+        const guildMember = guild.members.cache.get(targetId);
+        if (!guildMember || guildMember.roles.cache.has(config.donderRoleId)) {
+            return; //member left server
+        }
+        await addRoleToGuildMember(config.donderRoleId, guildMember);
+        const channel = client.channels.cache.get(config.modlogChannelId);
+        const invalidChannel = channel === undefined || !(channel instanceof TextChannel);
+        await insertModLog({
+            action_type: ModlogTypes.GIVE_DONDER,
+            mod_user_id: user.id,
+            target_user_id: targetId,
+            reason: 'Introduction message reaction add'
+        });
+
+        if (invalidChannel) {
+            logger.error({}, 'Invalid modlog channel');
+            return;
+        }
+        const returnEmbed = {
+            description: reaction.message.content ?? 'empty introduction message',
+            color: EMBED_COLOUR,
+            author: {
+                name: reaction.message.author!.username,
+                iconURL: reaction.message.author!.avatarURL(),
+                URL: reaction.message!.url
+            }
+        };
+
+        await channel.send({
+            content: `Gave <@${targetId}> (${reaction.message.author!.username}) Donder Role, REASON: Reaction Add by <@${user.id}>`,
+            embeds: [returnEmbed]
+        });
+    }
 }

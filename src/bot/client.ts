@@ -1,4 +1,4 @@
-﻿import {GatewayIntentBits} from 'discord.js';
+﻿import {GatewayIntentBits, Partials} from 'discord.js';
 import {ClientExtended} from '@models/discord.js';
 
 export const client = new ClientExtended({
@@ -7,6 +7,9 @@ export const client = new ClientExtended({
         GatewayIntentBits.GuildMembers,
         GatewayIntentBits.GuildPresences,
         GatewayIntentBits.DirectMessages,
-        GatewayIntentBits.MessageContent
-    ]
+        GatewayIntentBits.MessageContent,
+        GatewayIntentBits.GuildMessages,
+        GatewayIntentBits.GuildMessageReactions
+    ],
+    partials: [Partials.Message, Partials.Channel, Partials.Reaction],
 });
