@@ -201,12 +201,20 @@ export interface UserData {
 export interface UserDiscord {
     baid: Int8;
     discord_id: string;
+    notify_on_beaten_by_rival: Generated<boolean>;
+    notify_on_rival_beaten: Generated<boolean>;
 }
+
 
 export interface UserRatingSummary {
     baid: Int8;
     min_top_50_rate: Generated<Numeric>;
     top_50_sum_rate: Generated<Numeric>;
+}
+
+export interface UserRival {
+    baid: Int8;
+    rival_baid: Int8;
 }
 
 export interface UserSongRate {
@@ -250,6 +258,7 @@ export interface DB {
     user_discord: UserDiscord;
     user_rating_history: UserRatingHistory;
     user_rating_summary: UserRatingSummary;
+    user_rival: UserRival;
     user_song_rate: UserSongRate;
     user_top_50: UserTop50;
 }

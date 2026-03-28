@@ -25,8 +25,8 @@ export async function sendUserBeatsRivalScoreNotification(eventData: RivalScoreN
     const title = getSongTitle(eventData.song_id, Language.JAPANESE)
     description += `## You beat ${rivalName}'s score`
     description += `\n### ${difficultyEmoji} ${title}`
-    description += `\nYour score: ${rankIdToEmoji(eventData.user_rank - 2)}${eventData.user_score} (#${eventData.user_leaderboard_position} ${userDelta})`;
-    description += `\n${rivalName}'s score: ${rankIdToEmoji(eventData.rival_rank - 2)}${eventData.rival_score} (#${eventData.rival_leaderboard_position} ${rivalDelta})`;
+    description += `\nYour score: ${rankIdToEmoji(eventData.user_rank - 2)}${eventData.user_score} `;//(#${eventData.user_leaderboard_position} ${userDelta})`;
+    description += `\n${rivalName}'s score: ${rankIdToEmoji(eventData.rival_rank - 2)}${eventData.rival_score}`;// (#${eventData.rival_leaderboard_position} ${rivalDelta})`;
     const embed = {
         color: EMBED_COLOUR,
         description: description,
@@ -59,8 +59,8 @@ export async function sendRivalBeatUserScoreNotification(eventData: RivalScoreNo
     const title = getSongTitle(eventData.song_id, Language.JAPANESE)
     description += `## ${rivalName} beat your score`
     description += `\n### ${difficultyEmoji} ${title}`
-    description += `\n${rivalName}'s score: ${rankIdToEmoji(eventData.rival_rank - 2)}${eventData.rival_score} (#${eventData.rival_leaderboard_position} ${rivalDelta})`;
-    description += `\nYour Score: ${rankIdToEmoji(eventData.user_rank - 2)}${eventData.user_score} (#${eventData.user_leaderboard_position} ${userDelta})`;
+    description += `\n${rivalName}'s score: ${rankIdToEmoji(eventData.rival_rank - 2)}${eventData.rival_score}`;// (#${eventData.rival_leaderboard_position} ${rivalDelta})`;
+    description += `\nYour Score: ${rankIdToEmoji(eventData.user_rank - 2)}${eventData.user_score}`;// (#${eventData.user_leaderboard_position} ${userDelta})`;
     const embed = {
         color: EMBED_COLOUR,
         description: description,
