@@ -85,7 +85,9 @@ export function validateConfig(): Record<string, any> {
         goodEmojiId: 'string',
         okEmojiId: 'string',
         bad1EmojiId: 'string',
-        bad2EmojiId: 'string'
+        bad2EmojiId: 'string',
+
+        ALLNetBADEmojiId: 'string'
     };
 
     const errors: string[] = [];
