@@ -88,62 +88,61 @@ async function enableChassisIfDisabled(memberId: string, reason: string) {
 }
 
 export async function handleEgtsMessageReactionAdd(reaction: MessageReaction | PartialMessageReaction, user: User | PartialUser) {
-    if (reaction.message.channel.id === config.introductionChannelId && config.whitelistedAdmins.includes(user.id)) {
-        const targetId = reaction.message.author!.id
-        const guild = client.guilds.cache.get(config.guildId)!;
-        const guildMember = guild.members.cache.get(targetId);
-        if (!guildMember || guildMember.roles.cache.has(config.donderRoleId)) {
-            return; //member left server
-        }
-        if (reaction.emoji.name === "👋" || reaction.emoji.name === "👍") {
-            await addRoleToGuildMember(config.donderRoleId, guildMember);
-            const channel = client.channels.cache.get(config.modlogChannelId);
-            const invalidChannel = channel === undefined || !(channel instanceof TextChannel);
-            await insertModLog({
-                action_type: ModlogTypes.GIVE_DONDER,
-                mod_user_id: user.id,
-                target_user_id: targetId,
-                reason: `Introduction message reaction add; MESSAGE: ${reaction.message.content ?? 'empty introduction message'}`
-            });
+    if (reaction.message.channel.id !== config.introductionChannelId || !config.whitelistedAdmins.includes(user.id)) return;
+    const targetId = reaction.message.author!.id
+    const guild = client.guilds.cache.get(config.guildId)!;
+    const guildMember = guild.members.cache.get(targetId);
+    if (!guildMember || guildMember.roles.cache.has(config.donderRoleId)) {
+        return; //member left server or member already has donder role
+    }
+    if (reaction.emoji.name === "👋" || reaction.emoji.name === "👍") {
+        await addRoleToGuildMember(config.donderRoleId, guildMember);
+        const channel = client.channels.cache.get(config.donderLogChannelId);
+        const invalidChannel = channel === undefined || !(channel instanceof TextChannel);
+        await insertModLog({
+            action_type: ModlogTypes.GIVE_DONDER,
+            mod_user_id: user.id,
+            target_user_id: targetId,
+            reason: `Introduction message reaction add; MESSAGE: ${reaction.message.content ?? 'empty introduction message'}`
+        });
 
-            if (invalidChannel) {
-                logger.error({}, 'Invalid modlog channel');
-                return;
+        if (invalidChannel) {
+            logger.error({}, 'Invalid donderLog channel');
+            return;
+        }
+        const returnEmbed = {
+            description: reaction.message.content ?? 'empty introduction message',
+            color: EMBED_COLOUR,
+            author: {
+                name: reaction.message.author!.username,
+                iconURL: reaction.message.author!.avatarURL(),
+                URL: reaction.message!.url
             }
-            const returnEmbed = {
-                description: reaction.message.content ?? 'empty introduction message',
-                color: EMBED_COLOUR,
-                author: {
-                    name: reaction.message.author!.username,
-                    iconURL: reaction.message.author!.avatarURL(),
-                    URL: reaction.message!.url
-                }
-            };
+        };
 
-            await channel.send({
-                content: `Gave <@${targetId}> (${reaction.message.author!.username}) Donder Role, REASON: Reaction Add by <@${user.id}>`,
-                embeds: [returnEmbed]
-            });
-        } else if (reaction.emoji.id === config.ALLNetBADEmojiId) {
-            let description =''
-            // description += '**日本語**\nこの自己紹介は不十分です。ルールを再度ご確認のうえ、適切な自己紹介を行い、紹介者を@メンションしてください'
-            // description += '\n\n**ENG**\nThis introduction is insufficient. Please review the rules and provide a proper introduction, including @mentioning your referrer.'
-            // description += '\n\n**中文**\n此自我介紹並不完整。請重新閱讀規則並提供完整的自我介紹，同時@提及你的轉介人。'
-            description += '**日本語**\nこの自己紹介は不十分です。ルールを再度ご確認のうえ、適切で十分な自己紹介を行ってください。'
-            description += '\n\n**ENG**\nThis introduction is insufficient. Please review the rules and provide a proper introduction.'
-            description += '\n\n**中文**\n此自我介紹並不完整。請重新閱讀規則並提供一份完整且充分的自我介紹。'
-            const returnEmbed = {
-                description: description,
-                color: EMBED_COLOUR,
-                author: {
-                    name: reaction.message.author!.username,
-                    iconURL: reaction.message.author!.avatarURL(),
-                    URL: reaction.message!.url
-                }
-            };
-            await reaction.message!.reply({
-                embeds: [returnEmbed]
-            })
-        }
+        await channel.send({
+            content: `Gave <@${targetId}> (${reaction.message.author!.username}) Donder Role, REASON: Reaction Add by <@${user.id}>`,
+            embeds: [returnEmbed]
+        });
+    } else if (reaction.emoji.id === config.ALLNetBADEmojiId) {
+        let description = ''
+        // description += '**日本語**\nこの自己紹介は不十分です。ルールを再度ご確認のうえ、適切な自己紹介を行い、紹介者を@メンションしてください'
+        // description += '\n\n**ENG**\nThis introduction is insufficient. Please review the rules and provide a proper introduction, including @mentioning your referrer.'
+        // description += '\n\n**中文**\n此自我介紹並不完整。請重新閱讀規則並提供完整的自我介紹，同時@提及你的轉介人。'
+        description += '**日本語**\nこの自己紹介は不十分です。ルールを再度ご確認のうえ、適切で十分な自己紹介を行ってください。'
+        description += '\n\n**ENG**\nThis introduction is insufficient. Please review the rules and provide a proper introduction.'
+        description += '\n\n**中文**\n此自我介紹並不完整。請重新閱讀規則並提供一份完整且充分的自我介紹。'
+        const returnEmbed = {
+            description: description,
+            color: EMBED_COLOUR,
+            author: {
+                name: reaction.message.author!.username,
+                iconURL: reaction.message.author!.avatarURL(),
+                URL: reaction.message!.url
+            }
+        };
+        await reaction.message!.reply({
+            embeds: [returnEmbed]
+        })
     }
 }
