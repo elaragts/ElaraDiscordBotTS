@@ -43,6 +43,8 @@ export function validateConfig(): Record<string, any> {
         guildId: 'string',
         botChannelId: 'string',
         modlogChannelId: 'string',
+        donderLogChannelId: 'string',
+        introductionChannelId: 'string',
         donderRoleId: 'string',
         musicinfoPath: 'string',
         wordlistPath: 'string',
@@ -84,7 +86,9 @@ export function validateConfig(): Record<string, any> {
         goodEmojiId: 'string',
         okEmojiId: 'string',
         bad1EmojiId: 'string',
-        bad2EmojiId: 'string'
+        bad2EmojiId: 'string',
+
+        ALLNetBADEmojiId: 'string'
     };
 
     const errors: string[] = [];

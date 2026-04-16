@@ -1,4 +1,4 @@
-﻿import {AutocompleteInteraction, ChatInputCommandInteraction, Client, MessageFlags} from 'discord.js';
+﻿import {AutocompleteInteraction, ChatInputCommandInteraction, Client, GuildMember, MessageFlags} from 'discord.js';
 import {doesUniqueIdExist, isValidLang, searchSong, searchSongSync} from '@utils/datatable.js';
 import logger from '@utils/logger.js';
 import {songResultSeparator} from '@constants/datatable.js';
@@ -119,4 +119,14 @@ export function isUserBoostingServer(userId: string): boolean {
         return member.roles.cache.has(config.serverBoostRoleId) || member.roles.cache.has(config.adminRoleId);
     }
     return false;
+}
+
+export async function addRoleToGuildMember(roleId: string, member: GuildMember) {
+    const guild = client.guilds.cache.get(config.guildId)!;
+    const role = guild.roles.cache.get(roleId);
+    if (!role) {
+        logger.error({}, `Failed to find role: ${roleId}`);
+        return;
+    }
+    await member.roles.add(role);
 }

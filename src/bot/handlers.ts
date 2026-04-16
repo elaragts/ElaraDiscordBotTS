@@ -4,11 +4,11 @@
     Collection,
     Events, GuildMember,
     InteractionContextType,
-    MessageFlags, PartialGuildMember
+    MessageFlags, MessageReaction, PartialGuildMember, PartialMessageReaction, PartialUser, User
 } from 'discord.js';
 import {Command, ClientExtended} from '@models/discord.js';
 import path from 'node:path';
-import { readdir } from "fs/promises";
+import {readdir} from "fs/promises";
 import logger from '@utils/logger.js';
 import config from '#config' with {type: 'json'};
 
@@ -19,14 +19,18 @@ import {
     replyWithErrorMessage
 } from '@utils/discord.js';
 import {fileURLToPath, pathToFileURL} from 'url';
-import {handleEgtsGuildMemberRemove, handleEgtsGuildMemberUpdate} from "../events/egtsGuildEvents.js";
+import {
+    handleEgtsGuildMemberRemove,
+    handleEgtsGuildMemberUpdate,
+    handleEgtsMessageReactionAdd
+} from "../events/egtsGuildEvents.js";
 import {startTasks} from "../tasks/index.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 export async function registerHandlers(client: ClientExtended) {
-    client.once(Events.ClientReady, async readyClient =>{
+    client.once(Events.ClientReady, async readyClient => {
         logger.info(`Ready! Logged in as ${readyClient.user.tag} in ${readyClient.guilds.cache.size} guilds`);
 
         await readyClient.guilds.cache.get(config.guildId)?.members.fetch(); //cache EGTS discord members
@@ -44,11 +48,27 @@ export async function registerHandlers(client: ClientExtended) {
     });
 
     client.on(Events.GuildMemberRemove, async guildMember => {
-        await handleGuildMemberRemove(guildMember);
+        try {
+            await handleGuildMemberRemove(guildMember);
+        } catch (err) {
+            logger.error(err);
+        }
     })
 
     client.on(Events.GuildMemberUpdate, async (oldGuildMember, newGuildMember) => {
-        await handleGuildMemberUpdate(oldGuildMember, newGuildMember);
+        try {
+            await handleGuildMemberUpdate(oldGuildMember, newGuildMember);
+        } catch (err) {
+            logger.error(err);
+        }
+    })
+
+    client.on(Events.MessageReactionAdd, async (reaction, user) => {
+        try {
+            await handleMessageReactionAdd(reaction, user);
+        } catch (err) {
+            logger.error(err);
+        }
     })
 
     client.commands = new Collection();
@@ -140,5 +160,20 @@ async function handleGuildMemberRemove(guildMember: GuildMember | PartialGuildMe
 async function handleGuildMemberUpdate(oldGuildMember: GuildMember | PartialGuildMember, guildMember: GuildMember) {
     if (guildMember.guild.id === config.guildId) {
         await handleEgtsGuildMemberUpdate(oldGuildMember, guildMember);
+    }
+}
+
+async function handleMessageReactionAdd(reaction: MessageReaction | PartialMessageReaction, user: User | PartialUser) {
+    if (reaction.partial) {
+        // If the message this reaction belongs to was removed, the fetching might result in an API error which should be handled
+        try {
+            await reaction.fetch();
+        } catch (error) {
+            logger.error({err: error}, 'Failed to fetch reaction');
+            return;
+        }
+    }
+    if (reaction.message.guild?.id === config.guildId) {
+        await handleEgtsMessageReactionAdd(reaction, user)
     }
 }
