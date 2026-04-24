@@ -14,6 +14,8 @@ import {createCostumeAvatar} from '@utils/costume.js';
 import {ALL_CONTEXTS, ALL_INTEGRATION_TYPES, DIFFICULTY_CHOICES, EMBED_COLOUR} from '@constants/discord.js';
 import {ChatInputCommandInteractionExtended, Command} from '@models/discord.js';
 import {getUserSongRating} from '@database/queries/rating.js';
+import config from '#config' with {type: 'json'};
+
 
 const COMMAND_NAME = 'My Stats';
 
@@ -91,10 +93,15 @@ async function execute(interaction: ChatInputCommandInteractionExtended) {
     judgement += `${judgeIdToEmoji(0)}${song.good_count}\n`;
     judgement += `${judgeIdToEmoji(1)}${song.ok_count}\n`;
     judgement += `${judgeIdToEmoji(2)}${judgeIdToEmoji(3)}${song.miss_count}`;
-    let pointsLabel = '点';
     let judgementLabel = '判定';
-    let comboLabel = '最大コンボ数';
-    let rendaLabel = '連打数';
+    let comboLabel = '';
+    for (let emoji of config.maxComboEmojiIds) {
+        comboLabel += emoji;
+    }
+    let rendaLabel = '';
+    for (let emoji of config.rendaEmojiIds) {
+        rendaLabel += emoji;
+    }
     let playCountLabel = 'プレイ回数';
     let clearCountLabel = 'ノルマクリア回数';
     let fullComboLabel = 'フルコンボ回数';
@@ -103,10 +110,7 @@ async function execute(interaction: ChatInputCommandInteractionExtended) {
     let leaderboardSuffix = '位';
     let ratingLabel = 'レート';
     if (lang === 1) {
-        pointsLabel = ' points';
         judgementLabel = 'judgement';
-        comboLabel = 'Max Combo';
-        rendaLabel = 'Drumroll';
         playCountLabel = 'Play Count';
         clearCountLabel = 'Clear Count';
         fullComboLabel = 'Full Combo Count';
@@ -122,7 +126,9 @@ async function execute(interaction: ChatInputCommandInteractionExtended) {
     }
 
     let description = '';
-    description += `${leaderboardLabel}: ${song.leaderboard_position}${leaderboardSuffix}`;
+    if (!song.is_leaderboard_banned) {
+        description += `${leaderboardLabel}: ${song.leaderboard_position}${leaderboardSuffix}`;
+    }
     description += `\n${playCountLabel}: ${song.play_count}`;
     description += `\n${clearCountLabel}: ${song.clear_count}`;
     description += `\n${fullComboLabel}: ${song.full_combo_count}`;
@@ -131,7 +137,7 @@ async function execute(interaction: ChatInputCommandInteractionExtended) {
         const internalDifficulty = getSongInternalDifficulty(uniqueId, difficulty);
         description += `\n${ratingLabel}: ${Number(rating).toFixed(2)}/${getMaxPotentialRatingFromInternalDifficulty(internalDifficulty).toFixed(2)}`;
     }
-    description += `\n## ${desc}${song.score}${pointsLabel}`;
+    description += `\n## ${desc}${song.score}`;
 
 
     //construct avatar
@@ -157,8 +163,8 @@ async function execute(interaction: ChatInputCommandInteractionExtended) {
                 inline: true
             },
             {
-                name: '',
-                value: `**${comboLabel}:** ${song.combo_count}\n**${rendaLabel}:** ${song.drumroll_count}`,
+                name: '‎ ', //had to put some fuckass empty character for it to force newline
+                value: `${comboLabel}${song.combo_count}\n${rendaLabel}${song.drumroll_count}`,
                 inline: true
             }
         ]

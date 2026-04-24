@@ -88,6 +88,9 @@ export function validateConfig(): Record<string, any> {
         bad1EmojiId: 'string',
         bad2EmojiId: 'string',
 
+        rendaEmojiIds: 'object',
+        maxComboEmojiIds: 'object',
+
         ALLNetBADEmojiId: 'string'
     };
 

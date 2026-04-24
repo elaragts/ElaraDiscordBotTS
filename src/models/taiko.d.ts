@@ -196,6 +196,7 @@ export interface UserData {
     unlocked_puchi: ArrayType<Int8>;
     unlocked_song_id_list: ArrayType<Int8>;
     unlocked_ura_song_id_list: ArrayType<Int8>;
+    is_leaderboard_banned: Generated<boolean>;
 }
 
 export interface UserDiscord {

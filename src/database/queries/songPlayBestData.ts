@@ -17,6 +17,7 @@ export async function getLeaderboard(uniqueId: number, difficulty: number, offse
         ])
         .where('sbd.song_id', '=', uniqueId)
         .where('sbd.difficulty', '=', difficulty)
+        .where('ud.is_leaderboard_banned', '=', false)
         .orderBy('sbd.best_score', 'desc')
         .limit(PAGE_LIMIT)
         .offset(offset)
@@ -74,6 +75,7 @@ export async function getBestScore(uniqueId: number, difficulty: number, baid: n
             'spd.miss_count',
             'spd.ok_count',
             'c.access_code',
+            'ud.is_leaderboard_banned',
             sql<number>`(SELECT COUNT(*) + 1
                          FROM song_best_data
                          WHERE song_id = ${uniqueId}
