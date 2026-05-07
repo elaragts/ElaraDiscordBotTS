@@ -3,6 +3,9 @@ import path from 'node:path';
 import {createCanvas, Image, loadImage} from 'canvas';
 import {CostumeData} from '@models/queries.js';
 import config from '#config' with {type: 'json'};
+import {getEnableExperimentalFeaturesFromBaid} from "@database/queries/userDiscord.js";
+import {getMaxPassedDanId} from '@database/queries/userData.js';
+import logger from '@utils/logger.js';
 
 const width = 463;
 const height = 400;
@@ -89,7 +92,60 @@ const applyMaskAndColor = async (mask: Image, color: string) => {
     return offscreenCanvas;
 };
 
-export async function createCostumeAvatar(avatar: CostumeData): Promise<Buffer> {
+
+export async function getAvatar(avatar: CostumeData): Promise<Buffer> {
+    const experimentalFeaturesEnabled = await getEnableExperimentalFeaturesFromBaid(avatar.baid);
+    if (experimentalFeaturesEnabled) {
+        try {
+            return await getAvatarFromAvatarServer(avatar);
+        } catch (err) {
+            logger.warn({err, baid: avatar.baid}, 'Avatar server render failed, falling back to sprite avatar');
+            return generateAvatarFromSprite(avatar);
+        }
+    }
+
+    return generateAvatarFromSprite(avatar);
+}
+
+export async function getAvatarFromAvatarServer(avatar: CostumeData): Promise<Buffer> {
+    const url = new URL('/render', normaliseAvatarServerPath(config.avatarServer));
+    const mode = avatar.current_kigurumi !== 0 ? 'costume' : 'default';
+
+    url.search = new URLSearchParams({
+        mode,
+        body: avatar.current_body.toString(),
+        head: avatar.current_head.toString(),
+        cos: avatar.current_kigurumi.toString(),
+        acce: avatar.current_puchi.toString(),
+        time: '0.75',
+        animName: 'don_combo',
+        backgroundTransparent: 'true',
+        bodyColor: numberToColourMap[avatar.color_body] || numberToColourMap[0],
+        faceColor: numberToColourMap[avatar.color_face] || numberToColourMap[0],
+        rimColor: numberToColourMap[avatar.color_limb] || numberToColourMap[0],
+        camViewport: '0.25',
+        camY: '0.2',
+    }).toString();
+
+    const DANI_COSTUME_ID = 36;
+    const DAN_ID_TO_DANI_COSTUME_SUB_OFFSET = 6
+    if (avatar.current_kigurumi === DANI_COSTUME_ID) {
+        url.searchParams.set('cosSub', (await getMaxPassedDanId(avatar.baid) + DAN_ID_TO_DANI_COSTUME_SUB_OFFSET).toString());
+    }
+
+    const response = await fetch(url);
+    if (!response.ok || !response.headers.get('content-type')?.toLowerCase().includes('image/png')) {
+        throw new Error(`Avatar server returned ${response.status} ${response.headers.get('content-type') ?? ''}`.trim());
+    }
+
+    return Buffer.from(await response.arrayBuffer());
+}
+
+function normaliseAvatarServerPath(avatarServerPath: string): string {
+    return /^https?:\/\//i.test(avatarServerPath) ? avatarServerPath : `http://${avatarServerPath}`;
+}
+
+export async function generateAvatarFromSprite(avatar: CostumeData): Promise<Buffer> {
     // while (costumeData.length < 5) {
     //     costumeData.push(0);
     // }

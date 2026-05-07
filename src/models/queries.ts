@@ -7,6 +7,7 @@
 }
 
 export type CostumeData = {
+    baid: number
     current_body: number;
     current_face: number;
     current_head: number;
@@ -14,6 +15,7 @@ export type CostumeData = {
     current_puchi: number;
     color_body: number;
     color_face: number;
+    color_limb: number;
 };
 
 export type MonthlyPlayCount = {
@@ -33,6 +35,7 @@ export type UserProfile = {
     current_puchi: number;
     color_body: number;
     color_face: number;
+    color_limb: number;
     play_count: number;
     dan_id: number;
     clear_state: number;

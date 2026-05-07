@@ -10,7 +10,7 @@ import {getSongInternalDifficulty, getSongStars, getSongTitle} from '@utils/data
 import {difficultyIdToName, getMaxPotentialRatingFromInternalDifficulty} from '@utils/common.js';
 import {crownIdToEmoji, difficultyToEmoji, judgeIdToEmoji, rankIdToEmoji} from '@utils/config.js';
 import {getCostume} from '@database/queries/userData.js';
-import {createCostumeAvatar} from '@utils/costume.js';
+import {getAvatar} from '@utils/costume.js';
 import {ALL_CONTEXTS, ALL_INTEGRATION_TYPES, DIFFICULTY_CHOICES, EMBED_COLOUR} from '@constants/discord.js';
 import {ChatInputCommandInteractionExtended, Command} from '@models/discord.js';
 import {getUserSongRating} from '@database/queries/rating.js';
@@ -142,7 +142,7 @@ async function execute(interaction: ChatInputCommandInteractionExtended) {
 
     //construct avatar
     const costumeData = (await getCostume(baid))!;
-    const avatar = await createCostumeAvatar(costumeData);
+    const avatar = await getAvatar(costumeData);
     const attachment = new AttachmentBuilder(avatar, {name: 'avatar.png'});
     //construct embed
     const returnEmbed = {

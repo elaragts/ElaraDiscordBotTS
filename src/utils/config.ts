@@ -51,6 +51,7 @@ export function validateConfig(): Record<string, any> {
         internalDifficultyDataPath: 'string',
         tasks: 'object',
         spritesPath: 'string',
+        avatarServer: 'string',
         serverBoostRoleId: 'string',
         adminRoleId: 'string',
         whitelistedAdmins: 'object',

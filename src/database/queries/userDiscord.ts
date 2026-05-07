@@ -20,6 +20,15 @@ export async function getBaidFromDiscordId(discordId: string): Promise<number | 
     return row?.baid;
 }
 
+export async function getEnableExperimentalFeaturesFromBaid(baid: number): Promise<boolean> {
+    const row = await getDbSafe()
+        .selectFrom('user_discord')
+        .select(['enable_experimental_features'])
+        .where('baid', '=', baid)
+        .executeTakeFirst();
+
+    return row?.enable_experimental_features ?? false;
+}
 export async function getDiscordIdFromBaid(baid: number): Promise<string | undefined> {
     const row = await getDbSafe()
         .selectFrom('user_discord')

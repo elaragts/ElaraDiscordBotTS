@@ -8,7 +8,7 @@ import {Language} from '@constants/datatable.js';
 import {difficultyToEmoji} from '@utils/config.js';
 import {ALL_CONTEXTS, ALL_INTEGRATION_TYPES, EMBED_COLOUR} from '@constants/discord.js';
 import {getCostume, getMyDonName} from '@database/queries/userData.js';
-import {createCostumeAvatar} from '@utils/costume.js';
+import {getAvatar} from '@utils/costume.js';
 import {getRankFromAccuracy} from '@utils/rating.js';
 import {TOP50_DEPRECIATION_STEP} from '@constants/rating.js';
 
@@ -72,7 +72,7 @@ async function execute(interaction: ChatInputCommandInteractionExtended) {
         description += `${i + 1}. ${difficultyToEmoji(parseInt(entry.external_difficulty))}\`${getSongTitle(entry.song_id, Language.JAPANESE)}\`: ${rank} (${accuracyPercent}%) - ${weightedStr} (${rateRaw})\n`;
     }
 
-    const avatar = await createCostumeAvatar((await getCostume(baid))!);
+    const avatar = await getAvatar((await getCostume(baid))!);
     const attachment = new AttachmentBuilder(avatar, { name: 'avatar.png' });
 
     const returnEmbed = {

@@ -25,6 +25,7 @@ export async function getCostume(baid: number): Promise<CostumeData | undefined>
     return await getDbSafe()
         .selectFrom('user_data')
         .select([
+            'baid',
             'current_body',
             'current_face',
             'current_head',
@@ -32,9 +33,23 @@ export async function getCostume(baid: number): Promise<CostumeData | undefined>
             'current_puchi',
             'color_body',
             'color_face',
+            'color_limb'
         ])
         .where('baid', '=', baid)
         .executeTakeFirst();
+}
+
+export async function getMaxPassedDanId(baid: number): Promise<number> {
+    const row = await getDbSafe()
+        .selectFrom('dan_score_data')
+        .select('dan_id')
+        .where('baid', '=', baid)
+        .where('dan_type', '=', 1)
+        .where('clear_state', '>', 0)
+        .orderBy('dan_id', 'desc')
+        .executeTakeFirst();
+
+    return row?.dan_id ?? 0;
 }
 
 export async function getUserProfile(baid: number): Promise<UserProfile | undefined> {
@@ -87,6 +102,7 @@ export async function getUserProfile(baid: number): Promise<UserProfile | undefi
                    ud.current_puchi,
                    ud.color_body,
                    ud.color_face,
+                   ud.color_limb,
                    pc.play_count,
                    d.dan_id,
                    d.clear_state,
