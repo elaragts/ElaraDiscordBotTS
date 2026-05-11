@@ -147,8 +147,17 @@ export interface Token {
 }
 
 export interface UserAvatarCache {
+    animated_object_key: string | null;
+    animated_render_started_at: Timestamp | null;
+    animated_rendered_at: Timestamp | null;
+    animated_status: Generated<string>;
     avatar_hash: string;
     baid: Generated<Int8>;
+    renderer_version: Generated<number>;
+    static_object_key: string | null;
+    static_render_started_at: Timestamp | null;
+    static_rendered_at: Timestamp | null;
+    static_status: Generated<string>;
     updated_at: Generated<Timestamp>;
 }
 

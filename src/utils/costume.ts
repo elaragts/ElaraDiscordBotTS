@@ -1,14 +1,50 @@
 ﻿import fs from 'node:fs';
 import path from 'node:path';
+import crypto from 'node:crypto';
 import {createCanvas, Image, loadImage} from 'canvas';
 import {CostumeData} from '@models/queries.js';
 import config from '#config' with {type: 'json'};
 import {getEnableExperimentalFeaturesFromBaid} from "@database/queries/userDiscord.js";
-import {getMaxPassedDanId} from '@database/queries/userData.js';
+import {
+    getMaxPassedDanId,
+    getUserAvatarCache,
+    upsertUserAvatarCacheQueued,
+} from '@database/queries/userData.js';
 import logger from '@utils/logger.js';
 
 const width = 463;
 const height = 400;
+const RENDERER_VERSION = Number(process.env.AVATAR_RENDERER_VERSION ?? 1);
+const AVATAR_STATIC_PREFIX = 'avatars/static';
+const AVATAR_S3_REGION = process.env.AVATAR_S3_REGION ?? 'us-east-1';
+const AVATAR_S3_ENDPOINT = process.env.AVATAR_S3_ENDPOINT;
+const AVATAR_S3_BUCKET = process.env.AVATAR_S3_BUCKET;
+const AVATAR_S3_ACCESS_KEY_ID = process.env.AVATAR_S3_ACCESS_KEY_ID;
+const AVATAR_S3_SECRET_ACCESS_KEY = process.env.AVATAR_S3_SECRET_ACCESS_KEY;
+
+export type AvatarFileType = 'png' | 'webp';
+export type AvatarImage = {
+    buffer: Buffer;
+    filetype: AvatarFileType;
+};
+
+type AvatarRenderMode = 'costume' | 'default';
+type AvatarRenderRequest = {
+    mode: AvatarRenderMode;
+    body: number;
+    head: number;
+    face: number;
+    cos: number;
+    acce: number;
+    bodyColorId: number;
+    faceColorId: number;
+    rimColorId: number;
+    bodyColor: string;
+    faceColor: string;
+    rimColor: string;
+    cosSub?: number;
+};
+
 const numberToColourMap: Record<number, string> = {
     0: '#F84828',
     1: '#68C0C0',
@@ -93,13 +129,17 @@ const applyMaskAndColor = async (mask: Image, color: string) => {
 };
 
 
-export async function getAvatar(avatar: CostumeData): Promise<Buffer> {
+export async function getAvatar(avatar: CostumeData): Promise<AvatarImage> {
     const experimentalFeaturesEnabled = await getEnableExperimentalFeaturesFromBaid(avatar.baid);
     if (experimentalFeaturesEnabled) {
         try {
-            return await getAvatarFromAvatarServer(avatar);
+            if (!config.checkAvatarCache) {
+                return await getAvatarFromAvatarServer(avatar, undefined, 'png');
+            }
+
+            return await getAvatarFromCacheOrQueueAnimation(avatar);
         } catch (err) {
-            logger.warn({err, baid: avatar.baid}, 'Avatar server render failed, falling back to sprite avatar');
+            logger.warn({err, baid: avatar.baid}, 'Avatar render failed, falling back to sprite avatar');
             return generateAvatarFromSprite(avatar);
         }
     }
@@ -107,45 +147,223 @@ export async function getAvatar(avatar: CostumeData): Promise<Buffer> {
     return generateAvatarFromSprite(avatar);
 }
 
-export async function getAvatarFromAvatarServer(avatar: CostumeData): Promise<Buffer> {
+async function getAvatarFromCacheOrQueueAnimation(avatar: CostumeData): Promise<AvatarImage> {
+    const request = await createAvatarRenderRequest(avatar);
+    const avatarHash = getAvatarHash(avatar.baid, request);
+    const staticObjectKey = `${AVATAR_STATIC_PREFIX}/${avatarHash}.png`;
+    const cache = await getUserAvatarCache(avatar.baid);
+
+    if (cache?.avatar_hash === avatarHash) {
+        if (cache.animated_status === 'ready' && cache.animated_object_key) {
+            try {
+                return await getAvatarFromS3(cache.animated_object_key);
+            } catch (err) {
+                logger.warn({err, baid: avatar.baid, objectKey: cache.animated_object_key}, 'Failed to read animated avatar from S3');
+            }
+        }
+
+        if (cache.static_status === 'ready' && cache.static_object_key) {
+            try {
+                return await getAvatarFromS3(cache.static_object_key);
+            } catch (err) {
+                logger.warn({err, baid: avatar.baid, objectKey: cache.static_object_key}, 'Failed to read static avatar from S3');
+            }
+        }
+    }
+
+    const staticAvatar = await getAvatarFromAvatarServer(avatar, request, 'png');
+    await putAvatarToS3(staticObjectKey, staticAvatar.buffer, 'image/png');
+    await upsertUserAvatarCacheQueued(avatar.baid, avatarHash, staticObjectKey, RENDERER_VERSION);
+    return staticAvatar;
+}
+
+export async function getAvatarFromAvatarServer(
+    avatar: CostumeData,
+    request?: AvatarRenderRequest,
+    expectedFiletype?: AvatarFileType,
+): Promise<AvatarImage> {
+    request ??= await createAvatarRenderRequest(avatar);
     const url = new URL('/render', normaliseAvatarServerPath(config.avatarServer));
-    const mode = avatar.current_kigurumi !== 0 ? 'costume' : 'default';
 
     url.search = new URLSearchParams({
-        mode,
-        body: avatar.current_body.toString(),
-        head: avatar.current_head.toString(),
-        cos: avatar.current_kigurumi.toString(),
-        acce: avatar.current_puchi.toString(),
-        time: '0.75',
+        mode: request.mode,
+        body: request.body.toString(),
+        head: request.head.toString(),
+        face: request.face.toString(),
+        cos: request.cos.toString(),
+        acce: request.acce.toString(),
+        time: '0.70',
         animName: 'don_combo',
         backgroundTransparent: 'true',
-        bodyColor: numberToColourMap[avatar.color_body] || numberToColourMap[0],
-        faceColor: numberToColourMap[avatar.color_face] || numberToColourMap[0],
-        rimColor: numberToColourMap[avatar.color_limb] || numberToColourMap[0],
+        bodyColor: request.bodyColor,
+        faceColor: request.faceColor,
+        rimColor: request.rimColor,
         camViewport: '0.25',
         camY: '0.2',
+        animationSource: 'don_3d_rf'
     }).toString();
 
-    const DANI_COSTUME_ID = 36;
-    const DAN_ID_TO_DANI_COSTUME_SUB_OFFSET = 6
-    if (avatar.current_kigurumi === DANI_COSTUME_ID) {
-        url.searchParams.set('cosSub', (await getMaxPassedDanId(avatar.baid) + DAN_ID_TO_DANI_COSTUME_SUB_OFFSET).toString());
+    if (request.cosSub !== undefined) {
+        url.searchParams.set('cosSub', request.cosSub.toString());
     }
 
     const response = await fetch(url);
-    if (!response.ok || !response.headers.get('content-type')?.toLowerCase().includes('image/png')) {
+    const contentType = response.headers.get('content-type')?.toLowerCase() ?? '';
+    if (!response.ok || (!contentType.includes('image/png') && !contentType.includes('image/webp'))) {
         throw new Error(`Avatar server returned ${response.status} ${response.headers.get('content-type') ?? ''}`.trim());
     }
 
-    return Buffer.from(await response.arrayBuffer());
+    const filetype = contentType.includes('image/webp') ? 'webp' : 'png';
+    if (expectedFiletype !== undefined && filetype !== expectedFiletype) {
+        throw new Error(`Avatar server returned ${filetype}, expected ${expectedFiletype}`);
+    }
+
+    return {
+        buffer: Buffer.from(await response.arrayBuffer()),
+        filetype,
+    };
+}
+
+async function createAvatarRenderRequest(avatar: CostumeData): Promise<AvatarRenderRequest> {
+    const request: AvatarRenderRequest = {
+        mode: avatar.current_kigurumi !== 0 ? 'costume' : 'default',
+        body: avatar.current_body,
+        head: avatar.current_head,
+        face: avatar.current_face,
+        cos: avatar.current_kigurumi,
+        acce: avatar.current_puchi,
+        bodyColorId: avatar.color_body,
+        faceColorId: avatar.color_face,
+        rimColorId: avatar.color_limb,
+        bodyColor: numberToColourMap[avatar.color_body] || numberToColourMap[0],
+        faceColor: numberToColourMap[avatar.color_face] || numberToColourMap[0],
+        rimColor: numberToColourMap[avatar.color_limb] || numberToColourMap[0],
+    };
+
+    const DANI_COSTUME_ID = 36;
+    const DAN_ID_TO_DANI_COSTUME_SUB_OFFSET = 6;
+    if (avatar.current_kigurumi === DANI_COSTUME_ID) {
+        request.cosSub = await getMaxPassedDanId(avatar.baid) + DAN_ID_TO_DANI_COSTUME_SUB_OFFSET;
+    }
+
+    return request;
+}
+
+function getAvatarHash(baid: number, request: AvatarRenderRequest): string {
+    const raw = [
+        baid,
+        request.body,
+        request.head,
+        request.face,
+        request.cos,
+        request.acce,
+        request.bodyColorId,
+        request.faceColorId,
+        request.rimColorId,
+        RENDERER_VERSION,
+    ].join('|');
+    return crypto.createHash('sha256').update(raw, 'utf8').digest('hex');
+}
+
+async function getAvatarFromS3(objectKey: string): Promise<AvatarImage> {
+    const response = await s3Request('GET', objectKey);
+    if (!response.ok) {
+        throw new Error(`S3 GET ${objectKey} returned ${response.status}`);
+    }
+
+    const contentType = response.headers.get('content-type')?.toLowerCase() ?? '';
+    return {
+        buffer: Buffer.from(await response.arrayBuffer()),
+        filetype: contentType.includes('image/webp') || objectKey.endsWith('.webp') ? 'webp' : 'png',
+    };
+}
+
+async function putAvatarToS3(objectKey: string, buffer: Buffer, contentType: string): Promise<void> {
+    const response = await s3Request('PUT', objectKey, buffer, contentType);
+    if (!response.ok) {
+        throw new Error(`S3 PUT ${objectKey} returned ${response.status}`);
+    }
+}
+
+async function s3Request(method: 'GET' | 'PUT', objectKey: string, body?: Buffer, contentType?: string): Promise<Response> {
+    if (!AVATAR_S3_ENDPOINT || !AVATAR_S3_BUCKET || !AVATAR_S3_ACCESS_KEY_ID || !AVATAR_S3_SECRET_ACCESS_KEY) {
+        throw new Error('Avatar S3 config is missing');
+    }
+
+    const endpoint = new URL(AVATAR_S3_ENDPOINT);
+    const encodedKey = objectKey.split('/').map(encodeURIComponent).join('/');
+    const url = new URL(`${endpoint.pathname.replace(/\/$/, '')}/${AVATAR_S3_BUCKET}/${encodedKey}`, endpoint);
+    const now = new Date();
+    const amzDate = now.toISOString().replace(/[:-]|\.\d{3}/g, '');
+    const dateStamp = amzDate.slice(0, 8);
+    const payloadHash = crypto.createHash('sha256').update(body ?? '').digest('hex');
+    const headers: Record<string, string> = {
+        host: url.host,
+        'x-amz-content-sha256': payloadHash,
+        'x-amz-date': amzDate,
+    };
+
+    if (contentType) {
+        headers['content-type'] = contentType;
+    }
+
+    headers.authorization = createS3AuthorizationHeader(method, url, headers, payloadHash, dateStamp, amzDate);
+    return fetch(url, {
+        method,
+        headers,
+        body,
+    });
+}
+
+function createS3AuthorizationHeader(
+    method: string,
+    url: URL,
+    headers: Record<string, string>,
+    payloadHash: string,
+    dateStamp: string,
+    amzDate: string,
+): string {
+    const canonicalHeaders = Object.entries(headers)
+        .sort(([a], [b]) => a.localeCompare(b))
+        .map(([key, value]) => `${key.toLowerCase()}:${value.trim()}\n`)
+        .join('');
+    const signedHeaders = Object.keys(headers)
+        .map(key => key.toLowerCase())
+        .sort()
+        .join(';');
+    const canonicalRequest = [
+        method,
+        url.pathname,
+        url.searchParams.toString(),
+        canonicalHeaders,
+        signedHeaders,
+        payloadHash,
+    ].join('\n');
+    const credentialScope = `${dateStamp}/${AVATAR_S3_REGION}/s3/aws4_request`;
+    const stringToSign = [
+        'AWS4-HMAC-SHA256',
+        amzDate,
+        credentialScope,
+        crypto.createHash('sha256').update(canonicalRequest, 'utf8').digest('hex'),
+    ].join('\n');
+    const signingKey = getS3SigningKey(dateStamp);
+    const signature = crypto.createHmac('sha256', signingKey).update(stringToSign, 'utf8').digest('hex');
+
+    return `AWS4-HMAC-SHA256 Credential=${AVATAR_S3_ACCESS_KEY_ID}/${credentialScope}, SignedHeaders=${signedHeaders}, Signature=${signature}`;
+}
+
+function getS3SigningKey(dateStamp: string): Buffer {
+    const dateKey = crypto.createHmac('sha256', `AWS4${AVATAR_S3_SECRET_ACCESS_KEY}`).update(dateStamp).digest();
+    const regionKey = crypto.createHmac('sha256', dateKey).update(AVATAR_S3_REGION).digest();
+    const serviceKey = crypto.createHmac('sha256', regionKey).update('s3').digest();
+    return crypto.createHmac('sha256', serviceKey).update('aws4_request').digest();
 }
 
 function normaliseAvatarServerPath(avatarServerPath: string): string {
     return /^https?:\/\//i.test(avatarServerPath) ? avatarServerPath : `http://${avatarServerPath}`;
 }
 
-export async function generateAvatarFromSprite(avatar: CostumeData): Promise<Buffer> {
+export async function generateAvatarFromSprite(avatar: CostumeData): Promise<AvatarImage> {
     // while (costumeData.length < 5) {
     //     costumeData.push(0);
     // }
@@ -244,7 +462,7 @@ export async function generateAvatarFromSprite(avatar: CostumeData): Promise<Buf
     ctx.globalCompositeOperation = 'source-over';
     if (kigurumiId === 0) {
         if (!body || !face || !head || !headFaceMask || !headBodyMask) {
-            return canvas.toBuffer();
+            return {buffer: canvas.toBuffer('image/png'), filetype: 'png'};
         }
         ctx.drawImage(body, 0, 0);
         ctx.drawImage(face, 0, 0);
@@ -255,12 +473,12 @@ export async function generateAvatarFromSprite(avatar: CostumeData): Promise<Buf
         ctx.drawImage(head, 0, 0);
     } else {
         if (!kigurumi) {
-            return canvas.toBuffer();
+            return {buffer: canvas.toBuffer('image/png'), filetype: 'png'};
         }
         ctx.drawImage(kigurumi, 0, 0);
     }
     ctx.drawImage(puchi, 0, 0);
 
     // Save the final image
-    return canvas.toBuffer('image/png');
+    return {buffer: canvas.toBuffer('image/png'), filetype: 'png'};
 }

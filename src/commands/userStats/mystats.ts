@@ -143,7 +143,8 @@ async function execute(interaction: ChatInputCommandInteractionExtended) {
     //construct avatar
     const costumeData = (await getCostume(baid))!;
     const avatar = await getAvatar(costumeData);
-    const attachment = new AttachmentBuilder(avatar, {name: 'avatar.png'});
+    const avatarFilename = `avatar.${avatar.filetype}`;
+    const attachment = new AttachmentBuilder(avatar.buffer, {name: avatarFilename});
     //construct embed
     const returnEmbed = {
         title: `${song.my_don_name} | ${getSongTitle(uniqueId, lang)} | ${difficultyIdToName(difficulty, lang)}${difficultyToEmoji(difficulty)}★${getSongStars(uniqueId, difficulty)}`,
@@ -153,7 +154,7 @@ async function execute(interaction: ChatInputCommandInteractionExtended) {
             name: COMMAND_NAME
         },
         thumbnail: {
-            url: 'attachment://avatar.png'
+            url: `attachment://${avatarFilename}`
         },
         timestamp: song.play_time.toISOString(),
         fields: [

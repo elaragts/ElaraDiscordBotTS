@@ -39,7 +39,7 @@ export function validateConfig(): Record<string, any> {
         throw new Error('Config file must contain a valid JSON object.');
     }
 
-    const expectedSchema: Record<string, 'string' | 'object'> = {
+    const expectedSchema: Record<string, 'string' | 'object' | 'boolean'> = {
         guildId: 'string',
         botChannelId: 'string',
         modlogChannelId: 'string',
@@ -52,6 +52,7 @@ export function validateConfig(): Record<string, any> {
         tasks: 'object',
         spritesPath: 'string',
         avatarServer: 'string',
+        checkAvatarCache: 'boolean',
         serverBoostRoleId: 'string',
         adminRoleId: 'string',
         whitelistedAdmins: 'object',

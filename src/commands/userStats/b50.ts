@@ -73,7 +73,8 @@ async function execute(interaction: ChatInputCommandInteractionExtended) {
     }
 
     const avatar = await getAvatar((await getCostume(baid))!);
-    const attachment = new AttachmentBuilder(avatar, { name: 'avatar.png' });
+    const avatarFilename = `avatar.${avatar.filetype}`;
+    const attachment = new AttachmentBuilder(avatar.buffer, { name: avatarFilename });
 
     const returnEmbed = {
         title: `${await getMyDonName(baid)}'s B50`,
@@ -83,7 +84,7 @@ async function execute(interaction: ChatInputCommandInteractionExtended) {
             name: COMMAND_NAME
         },
         thumbnail: {
-            url: 'attachment://avatar.png'
+            url: `attachment://${avatarFilename}`
         },
     };
 
