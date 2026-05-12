@@ -10,7 +10,7 @@ import {getSongInternalDifficulty, getSongStars, getSongTitle} from '@utils/data
 import {difficultyIdToName, getMaxPotentialRatingFromInternalDifficulty} from '@utils/common.js';
 import {crownIdToEmoji, difficultyToEmoji, judgeIdToEmoji, rankIdToEmoji} from '@utils/config.js';
 import {getCostume} from '@database/queries/userData.js';
-import {createCostumeAvatar} from '@utils/costume.js';
+import {getAvatar} from '@utils/costume.js';
 import {ALL_CONTEXTS, ALL_INTEGRATION_TYPES, DIFFICULTY_CHOICES, EMBED_COLOUR} from '@constants/discord.js';
 import {ChatInputCommandInteractionExtended, Command} from '@models/discord.js';
 import {getUserSongRating} from '@database/queries/rating.js';
@@ -142,8 +142,9 @@ async function execute(interaction: ChatInputCommandInteractionExtended) {
 
     //construct avatar
     const costumeData = (await getCostume(baid))!;
-    const avatar = await createCostumeAvatar(costumeData);
-    const attachment = new AttachmentBuilder(avatar, {name: 'avatar.png'});
+    const avatar = await getAvatar(costumeData);
+    const avatarFilename = `avatar.${avatar.filetype}`;
+    const attachment = new AttachmentBuilder(avatar.buffer, {name: avatarFilename});
     //construct embed
     const returnEmbed = {
         title: `${song.my_don_name} | ${getSongTitle(uniqueId, lang)} | ${difficultyIdToName(difficulty, lang)}${difficultyToEmoji(difficulty)}★${getSongStars(uniqueId, difficulty)}`,
@@ -153,7 +154,7 @@ async function execute(interaction: ChatInputCommandInteractionExtended) {
             name: COMMAND_NAME
         },
         thumbnail: {
-            url: 'attachment://avatar.png'
+            url: `attachment://${avatarFilename}`
         },
         timestamp: song.play_time.toISOString(),
         fields: [

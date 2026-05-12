@@ -1,6 +1,8 @@
 ﻿import {getDbSafe} from '@database/index.js';
 import type {CostumeData, UserProfile} from '@models/queries.js';
+import type {Selectable} from 'kysely';
 import {sql} from 'kysely';
+import type {UserAvatarCache} from '@models/taiko.d.js';
 import type {QueryResult} from 'pg';
 
 export async function getFavouriteSongsArray(baid: number): Promise<number[] | undefined> {
@@ -25,6 +27,7 @@ export async function getCostume(baid: number): Promise<CostumeData | undefined>
     return await getDbSafe()
         .selectFrom('user_data')
         .select([
+            'baid',
             'current_body',
             'current_face',
             'current_head',
@@ -32,9 +35,68 @@ export async function getCostume(baid: number): Promise<CostumeData | undefined>
             'current_puchi',
             'color_body',
             'color_face',
+            'color_limb'
         ])
         .where('baid', '=', baid)
         .executeTakeFirst();
+}
+
+export async function getMaxPassedDanId(baid: number): Promise<number> {
+    const row = await getDbSafe()
+        .selectFrom('dan_score_data')
+        .select('dan_id')
+        .where('baid', '=', baid)
+        .where('dan_type', '=', 1)
+        .where('clear_state', '>', 0)
+        .orderBy('dan_id', 'desc')
+        .executeTakeFirst();
+
+    return row?.dan_id ?? 0;
+}
+
+export async function getUserAvatarCache(baid: number): Promise<Selectable<UserAvatarCache> | undefined> {
+    return await getDbSafe()
+        .selectFrom('user_avatar_cache')
+        .selectAll()
+        .where('baid', '=', baid)
+        .executeTakeFirst();
+}
+
+export async function upsertUserAvatarCacheQueued(
+    baid: number,
+    avatarHash: string,
+    staticObjectKey: string,
+    rendererVersion: number,
+): Promise<void> {
+    await getDbSafe()
+        .insertInto('user_avatar_cache')
+        .values({
+            baid,
+            avatar_hash: avatarHash,
+            renderer_version: rendererVersion,
+            static_status: 'ready',
+            static_object_key: staticObjectKey,
+            static_rendered_at: new Date(),
+            animated_status: 'queued',
+            animated_object_key: null,
+            animated_render_started_at: null,
+            animated_rendered_at: null,
+        })
+        .onConflict(oc => oc
+            .column('baid')
+            .doUpdateSet({
+                avatar_hash: avatarHash,
+                renderer_version: rendererVersion,
+                static_status: 'ready',
+                static_object_key: staticObjectKey,
+                static_rendered_at: new Date(),
+                animated_status: 'queued',
+                animated_object_key: null,
+                animated_render_started_at: null,
+                animated_rendered_at: null,
+                updated_at: new Date(),
+            }))
+        .execute();
 }
 
 export async function getUserProfile(baid: number): Promise<UserProfile | undefined> {
@@ -87,6 +149,7 @@ export async function getUserProfile(baid: number): Promise<UserProfile | undefi
                    ud.current_puchi,
                    ud.color_body,
                    ud.color_face,
+                   ud.color_limb,
                    pc.play_count,
                    d.dan_id,
                    d.clear_state,

@@ -6,7 +6,7 @@ import {ALL_CONTEXTS, ALL_INTEGRATION_TYPES, EMBED_COLOUR} from '@constants/disc
 import {ChatInputCommandInteractionExtended, Command} from '@models/discord.js';
 import {getBattleStats, getLatestBattles} from '@database/queries/battle.js';
 import {PAGE_LIMIT} from '@constants/common.js';
-import {createCostumeAvatar} from '@utils/costume.js';
+import {getAvatar} from '@utils/costume.js';
 
 const COMMAND_NAME = 'Battle Stats';
 
@@ -89,15 +89,16 @@ async function execute(interaction: ChatInputCommandInteractionExtended) {
     }
 
     const costumeData = (await getCostume(baid))!;
-    const avatar = await createCostumeAvatar(costumeData);
-    const attachment = new AttachmentBuilder(avatar, {name: 'avatar.png'});
+    const avatar = await getAvatar(costumeData);
+    const avatarFilename = `avatar.${avatar.filetype}`;
+    const attachment = new AttachmentBuilder(avatar.buffer, {name: avatarFilename});
 
     const returnEmbed = {
         title: title,
         color: EMBED_COLOUR,
         description: description,
         thumbnail: {
-            url: 'attachment://avatar.png',
+            url: `attachment://${avatarFilename}`,
         }, author: {
             name: COMMAND_NAME
         }

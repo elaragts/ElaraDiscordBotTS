@@ -4,7 +4,7 @@ import {replyWithErrorMessage} from '@utils/discord.js';
 import {getUserProfile} from '@database/queries/userData.js';
 import {crownIdToEmoji, daniClearStateToEmoji, difficultyToEmoji, rankIdToEmoji} from '@utils/config.js';
 import {danIdToName} from '@utils/common.js';
-import {createCostumeAvatar} from '@utils/costume.js';
+import {getAvatar} from '@utils/costume.js';
 import {CostumeData} from '@models/queries.js';
 import {ALL_CONTEXTS, ALL_INTEGRATION_TYPES, EMBED_COLOUR} from '@constants/discord.js';
 import {ChatInputCommandInteractionExtended, Command} from '@models/discord.js';
@@ -91,6 +91,7 @@ async function execute(interaction: ChatInputCommandInteractionExtended) {
 `;
     }
     const costumeData: CostumeData = {
+        baid: baid,
         current_body: profile.current_body,
         current_face: profile.current_face,
         current_head: profile.current_head,
@@ -98,10 +99,12 @@ async function execute(interaction: ChatInputCommandInteractionExtended) {
         current_puchi: profile.current_puchi,
         color_body: profile.color_body,
         color_face: profile.color_face,
+        color_limb: profile.color_limb,
     };
 
-    const avatar = await createCostumeAvatar(costumeData);
-    const attachment = new AttachmentBuilder(avatar, {name: 'avatar.png'});
+    const avatar = await getAvatar(costumeData);
+    const avatarFilename = `avatar.${avatar.filetype}`;
+    const attachment = new AttachmentBuilder(avatar.buffer, {name: avatarFilename});
 
     let description = `**Title:** ${profile.title}`
     description += `\n**Play Count:** ${profile.play_count}`
@@ -121,7 +124,7 @@ async function execute(interaction: ChatInputCommandInteractionExtended) {
         color: EMBED_COLOUR,
         description: description,
         thumbnail: {
-            url: 'attachment://avatar.png',
+            url: `attachment://${avatarFilename}`,
         }, author: {
             name: COMMAND_NAME
         },

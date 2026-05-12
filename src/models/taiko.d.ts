@@ -146,6 +146,21 @@ export interface Token {
     id: number;
 }
 
+export interface UserAvatarCache {
+    animated_object_key: string | null;
+    animated_render_started_at: Timestamp | null;
+    animated_rendered_at: Timestamp | null;
+    animated_status: Generated<string>;
+    avatar_hash: string;
+    baid: Generated<Int8>;
+    renderer_version: Generated<number>;
+    static_object_key: string | null;
+    static_render_started_at: Timestamp | null;
+    static_rendered_at: Timestamp | null;
+    static_status: Generated<string>;
+    updated_at: Generated<Timestamp>;
+}
+
 export interface UserChassis {
     baid: Int8;
     chassis_id: Numeric;
@@ -202,6 +217,9 @@ export interface UserData {
 export interface UserDiscord {
     baid: Int8;
     discord_id: string;
+    enable_experimental_features: Generated<boolean>;
+    notify_on_beaten_by_rival: Generated<boolean>;
+    notify_on_rival_beaten: Generated<boolean>;
 }
 
 export interface UserRatingSummary {
@@ -246,6 +264,7 @@ export interface DB {
     song_best_data: SongBestData;
     song_play_data: SongPlayData;
     token: Token;
+    user_avatar_cache: UserAvatarCache;
     user_chassis: UserChassis;
     user_data: UserData;
     user_discord: UserDiscord;
