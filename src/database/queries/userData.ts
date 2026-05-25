@@ -4,6 +4,7 @@ import type {Selectable} from 'kysely';
 import {sql} from 'kysely';
 import type {UserAvatarCache} from '@models/taiko.d.js';
 import type {QueryResult} from 'pg';
+import config from '#config' with {type: 'json'};
 
 export async function getFavouriteSongsArray(baid: number): Promise<number[] | undefined> {
     const row = await getDbSafe()
@@ -48,6 +49,7 @@ export async function getMaxPassedDanId(baid: number): Promise<number> {
         .where('baid', '=', baid)
         .where('dan_type', '=', 1)
         .where('clear_state', '>', 0)
+        .where('version', '=', config.danVersion)
         .orderBy('dan_id', 'desc')
         .executeTakeFirst();
 
@@ -135,6 +137,7 @@ export async function getUserProfile(baid: number): Promise<UserProfile | undefi
             FROM (SELECT baid, dan_id, clear_state, ROW_NUMBER() OVER (PARTITION BY baid ORDER BY dan_id DESC) AS rn
                 FROM dan_score_data
                 WHERE dan_type = 1
+                AND version = ${config.danVersion}
                 AND baid = ${baid}
                 AND clear_state > 0) t
             WHERE rn = 1)
