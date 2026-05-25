@@ -83,6 +83,7 @@ export interface DanScoreData {
     dan_id: Int8;
     dan_type: Generated<number>;
     soul_gauge_total: Int8;
+    version: Generated<string>;
 }
 
 export interface DanStageScoreData {
@@ -98,6 +99,7 @@ export interface DanStageScoreData {
     play_score: Int8;
     song_number: Int8;
     total_hit_count: Int8;
+    version: Generated<string>;
 }
 
 export interface ModLog {
