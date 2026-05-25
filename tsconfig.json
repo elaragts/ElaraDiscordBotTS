@@ -11,6 +11,7 @@
       "@constants/*": ["constants/*"],
       "@database/*": ["database/*"],
       "@models/*": ["models/*"],
+      "@services/*": ["services/*"],
       "@utils/*": ["utils/*"]
     },
 

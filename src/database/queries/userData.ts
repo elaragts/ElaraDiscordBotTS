@@ -193,14 +193,14 @@ export async function getUserProfile(baid: number): Promise<UserProfile | undefi
 
 }
 
-export async function getMyDonName(baid: number): Promise<string | undefined> {
+export async function getMyDonName(baid: number): Promise<string> {
     const row = await getDbSafe()
         .selectFrom('user_data')
         .select(['my_don_name'])
         .where('baid', '=', baid)
         .executeTakeFirst();
 
-    return row?.my_don_name;
+    return row?.my_don_name ?? "どんちゃん";
 
 }
 

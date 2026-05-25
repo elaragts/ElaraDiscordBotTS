@@ -19,7 +19,6 @@ export interface Command {
 export class ClientExtended extends Client {
     public commands: Collection<string, Command> = new Collection();
     public ongoingBattles: Set<string> = new Set();
-    public playerFavouriteSongs: Map<number, number[]> = new Map();
 }
 
 export const chatInputCommandInteractionExtensions = {
