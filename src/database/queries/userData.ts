@@ -13,15 +13,21 @@ export async function getFavouriteSongsArray(baid: number): Promise<number[] | u
         .where('baid', '=', baid)
         .executeTakeFirst();
 
-    return row?.favorite_songs_array;
+    return row?.favorite_songs_array === undefined
+        ? undefined
+        : cleanFavouriteSongsArray(row.favorite_songs_array);
 }
 
 export async function setFavouriteSongsArray(baid: number, songArray: number[]): Promise<void> {
     await getDbSafe()
         .updateTable('user_data')
-        .set({'favorite_songs_array': songArray})
+        .set({'favorite_songs_array': cleanFavouriteSongsArray(songArray)})
         .where('baid', '=', baid)
         .executeTakeFirst();
+}
+
+function cleanFavouriteSongsArray(songArray: number[]): number[] {
+    return songArray.filter(song => Number.isFinite(song));
 }
 
 export async function getCostume(baid: number): Promise<CostumeData | undefined> {

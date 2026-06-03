@@ -1,6 +1,11 @@
 import type {BattleWinCondition} from '@constants/discord.js';
 import type {SongPlay} from '@models/queries.js';
-import type {BattleWinner} from './types.js';
+import type {BattlePlayer, BattleWinner} from '@services/battle/types.js';
+
+type BattleSubmission = {
+    player: BattlePlayer;
+    play: SongPlay;
+};
 
 export function calculateAccuracy(play: SongPlay, noteCount: number): number {
     const accuracyCoefficient = 100 / noteCount;
@@ -8,28 +13,32 @@ export function calculateAccuracy(play: SongPlay, noteCount: number): number {
 }
 
 export function getBattleWinner(
-    playerOnePlay: SongPlay,
-    playerTwoPlay: SongPlay,
+    submissions: BattleSubmission[],
     winCondition: BattleWinCondition,
     invertWinConditionLogic: boolean,
-    playerOneBaid: number,
-    playerTwoBaid: number,
-    playerOneName: string,
-    playerTwoName: string,
 ): BattleWinner {
-    const playerOneValue = playerOnePlay[winCondition];
-    const playerTwoValue = playerTwoPlay[winCondition];
+    const sortedSubmissions = [...submissions].sort((a, b) => {
+        const aValue = a.play[winCondition];
+        const bValue = b.play[winCondition];
 
-    if (playerOneValue === playerTwoValue) {
+        return invertWinConditionLogic
+            ? aValue - bValue
+            : bValue - aValue;
+    });
+    const winningSubmission = sortedSubmissions[0];
+    if (winningSubmission === undefined) {
         return {winnerBaid: -1, isDraw: true};
     }
 
-    const playerOneWins = (!invertWinConditionLogic && playerOneValue > playerTwoValue)
-        || (invertWinConditionLogic && playerOneValue < playerTwoValue);
+    const winningValue = winningSubmission.play[winCondition];
+    const tiedWinners = sortedSubmissions.filter(submission => submission.play[winCondition] === winningValue);
+    if (tiedWinners.length > 1) {
+        return {winnerBaid: -1, isDraw: true};
+    }
 
     return {
-        winnerBaid: playerOneWins ? playerOneBaid : playerTwoBaid,
-        winnerName: playerOneWins ? playerOneName : playerTwoName,
+        winnerBaid: winningSubmission.player.baid,
+        winnerName: winningSubmission.player.name,
         isDraw: false,
     };
 }

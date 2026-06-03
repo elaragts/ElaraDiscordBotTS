@@ -2,12 +2,26 @@
 import type {BattleLog, BattleStats} from '@models/queries.js';
 import {PAGE_LIMIT} from '@constants/common.js';
 
-export async function addBattle(uniqueId: number, baidOne: number, baidTwo: number, winner: number) {
+const PLAYER_BAID_COLUMNS = [
+    'player_one_baid',
+    'player_two_baid',
+    'player_three_baid',
+    'player_four_baid',
+] as const;
+
+export async function addBattle(uniqueId: number, playerBaids: number[], winner: number) {
+    const [baidOne, baidTwo, baidThree = null, baidFour = null] = playerBaids;
+    if (baidOne === undefined || baidTwo === undefined) {
+        throw new Error('Battle must have at least two players');
+    }
+
     await getDbSafe().insertInto('battle')
         .values({
             'song_number': uniqueId,
             'player_one_baid': baidOne,
             'player_two_baid': baidTwo,
+            'player_three_baid': baidThree,
+            'player_four_baid': baidFour,
             'winner_baid': winner,
             'battle_at': new Date().toISOString()
         })
@@ -19,18 +33,12 @@ export async function getBattleStats(
     opponentBaid?: number
 ): Promise<BattleStats> {
     const battleConditions = (eb: any) => {
-        const base = eb.or([
-            eb('player_one_baid', '=', baid),
-            eb('player_two_baid', '=', baid),
-        ]);
+        const base = buildPlayerCondition(eb, baid);
 
         if (opponentBaid !== undefined) {
             return eb.and([
                 base,
-                eb.or([
-                    eb('player_one_baid', '=', opponentBaid),
-                    eb('player_two_baid', '=', opponentBaid),
-                ]),
+                buildPlayerCondition(eb, opponentBaid),
             ]);
         }
 
@@ -46,15 +54,15 @@ export async function getBattleStats(
         .selectFrom('battle')
         .select(({fn}) => fn.countAll().as('total_wins'))
         .where((eb) => {
-            const base = eb('winner_baid', '=', baid);
+            const base = eb.and([
+                eb('winner_baid', '=', baid),
+                buildPlayerCondition(eb, baid),
+            ]);
 
             if (opponentBaid !== undefined) {
                 return eb.and([
                     base,
-                    eb.or([
-                        eb('player_one_baid', '=', opponentBaid),
-                        eb('player_two_baid', '=', opponentBaid),
-                    ]),
+                    buildPlayerCondition(eb, opponentBaid),
                 ]);
             }
 
@@ -93,20 +101,16 @@ export async function getLatestBattles(
             'battle_at',
             'player_one_baid',
             'player_two_baid',
+            'player_three_baid',
+            'player_four_baid',
         ])
         .where((eb) => {
-            const base = eb.or([
-                eb('player_one_baid', '=', baid),
-                eb('player_two_baid', '=', baid),
-            ]);
+            const base = buildPlayerCondition(eb, baid);
 
             if (opponentBaid !== undefined) {
                 return eb.and([
                     base,
-                    eb.or([
-                        eb('player_one_baid', '=', opponentBaid),
-                        eb('player_two_baid', '=', opponentBaid),
-                    ]),
+                    buildPlayerCondition(eb, opponentBaid),
                 ]);
             }
 
@@ -121,10 +125,15 @@ export async function getLatestBattles(
     return rawResults.map(row => ({
         winner_baid: row.winner_baid,
         battle_at: row.battle_at,
-        opponent_baid: opponentBaid ?? (
-            row.player_one_baid === baid
-                ? row.player_two_baid
-                : row.player_one_baid
-        ),
+        opponent_baids: [
+            row.player_one_baid,
+            row.player_two_baid,
+            row.player_three_baid,
+            row.player_four_baid,
+        ].filter((playerBaid): playerBaid is number => playerBaid !== null && playerBaid !== baid),
     }));
+}
+
+function buildPlayerCondition(eb: any, baid: number) {
+    return eb.or(PLAYER_BAID_COLUMNS.map(column => eb(column, '=', baid)));
 }

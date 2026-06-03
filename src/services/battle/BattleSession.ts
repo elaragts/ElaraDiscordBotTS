@@ -1,10 +1,8 @@
 import {MessageFlags, type InteractionResponse, type MessageComponentInteraction} from 'discord.js';
 import type {ClientExtended, ChatInputCommandInteractionExtended} from '@models/discord.js';
-import type {BattlePlayer, BattleRequest, BattleSubmissionState, JoinedBattle, StartedBattle} from './types.js';
+import type {BattlePlayer, BattleRequest, BattleSubmissionState, StartedBattle} from '@services/battle/types.js';
 import {
     buildCancelledEmbed,
-    buildConfirmComponents,
-    buildConfirmEmbed,
     buildInProgressEmbed,
     buildJoinComponents,
     buildJoinEmbed,
@@ -13,20 +11,21 @@ import {
     buildSubmissionTimedOutEmbed,
     buildSubmitComponents,
     CANCEL_BATTLE_ID,
-    CONFIRM_TIMEOUT_MS,
     JOIN_BATTLE_ID,
     JOIN_TIMEOUT_MS,
     START_BATTLE_ID,
     SUBMISSION_TIMEOUT_MS,
     SUBMIT_SCORE_ID,
-} from './battleMessages.js';
+} from '@services/battle/battleMessages.js';
 import {getBaidFromDiscordId} from '@database/queries/userDiscord.js';
 import {getFavouriteSongsArray, getMyDonName, setFavouriteSongsArray} from '@database/queries/userData.js';
 import {getLatestUserPlay, getMaxSongPlayDataId} from '@database/queries/songPlayBestData.js';
 import {addBattle} from '@database/queries/battle.js';
-import {calculateAccuracy, getBattleWinner} from './battleScoring.js';
-import logger from '@utils/logger.js';
+import {calculateAccuracy, getBattleWinner} from '@services/battle/battleScoring.js';
 import type {SongPlay} from '@models/queries.js';
+
+const MIN_BATTLE_PLAYERS = 2;
+const MAX_BATTLE_PLAYERS = 4;
 
 type BattleSessionArgs = {
     client: ClientExtended;
@@ -36,12 +35,15 @@ type BattleSessionArgs = {
 };
 
 export class BattleSession {
+    private static readonly activeSessions = new Set<BattleSession>();
+
     private readonly client: ClientExtended;
     private readonly interaction: ChatInputCommandInteractionExtended;
     private readonly host: BattlePlayer;
     private readonly request: BattleRequest;
     private readonly reservedUserIds = new Set<string>();
     private readonly originalFavouriteSongs = new Map<number, number[]>();
+    private restorePromise?: Promise<void>;
 
     public constructor(args: BattleSessionArgs) {
         this.client = args.client;
@@ -51,32 +53,34 @@ export class BattleSession {
     }
 
     public async start(): Promise<void> {
+        BattleSession.activeSessions.add(this);
         this.reservePlayer(this.host.user.id);
 
         try {
             const response = await this.interaction.reply({
-                embeds: [buildJoinEmbed({request: this.request, playerOneName: this.host.name})],
+                embeds: [buildJoinEmbed({request: this.request, players: [this.host]})],
                 components: buildJoinComponents().map(row => row.toJSON()),
             });
 
-            const joined = await this.waitForJoin(response);
-            if (joined === undefined) return;
-
-            this.reservePlayer(joined.player.user.id);
-
-            const started = await this.waitForHostConfirmation(response, joined);
+            const started = await this.waitForPlayers(response);
             if (started === undefined) return;
 
-            await this.runBattle(response, started, joined.player);
+            await this.runBattle(response, started);
         } finally {
             await this.restoreFavouriteSongs();
             this.releasePlayers();
+            BattleSession.activeSessions.delete(this);
         }
     }
 
-    private async waitForJoin(response: InteractionResponse): Promise<JoinedBattle | undefined> {
+    public static async restoreActiveFavouriteSongs(): Promise<void> {
+        await Promise.all([...BattleSession.activeSessions].map(session => session.restoreFavouriteSongs()));
+    }
+
+    private async waitForPlayers(response: InteractionResponse): Promise<StartedBattle | undefined> {
         return new Promise(resolve => {
             let settled = false;
+            const players = [this.host];
             const collector = response.createMessageComponentCollector({
                 filter: () => true,
                 time: JOIN_TIMEOUT_MS,
@@ -91,11 +95,28 @@ export class BattleSession {
 
                     settled = true;
                     await interaction.update({
-                        embeds: [buildCancelledEmbed(`${this.host.name} VS. TBD`)],
+                        embeds: [buildCancelledEmbed(this.formatBattleTitle(players))],
                         components: [],
                     });
                     collector.stop('battle_canceled');
                     resolve(undefined);
+                    return;
+                }
+
+                if (interaction.customId === START_BATTLE_ID) {
+                    if (interaction.user.id !== this.host.user.id) {
+                        await interaction.reply({content: 'Only the host can start the battle', flags: MessageFlags.Ephemeral});
+                        return;
+                    }
+
+                    if (players.length < MIN_BATTLE_PLAYERS) {
+                        await interaction.reply({content: 'At least one opponent must join before starting the battle', flags: MessageFlags.Ephemeral});
+                        return;
+                    }
+
+                    settled = true;
+                    collector.stop('battle_started');
+                    resolve({interaction, players: [...players]});
                     return;
                 }
 
@@ -103,82 +124,33 @@ export class BattleSession {
                     return;
                 }
 
-                const joiner = await this.validateJoiner(interaction);
-                if (joiner === undefined) return;
-
-                settled = true;
-                collector.stop('battle_joined');
-                resolve({interaction, player: joiner});
-            });
-
-            collector.on('end', async (_, reason) => {
-                if (!settled && reason === 'time') {
-                    settled = true;
-                    await this.interaction.editReply({
-                        embeds: [buildJoinTimedOutEmbed(this.host.name)],
-                        components: [],
-                    });
-                    resolve(undefined);
-                }
-            });
-        });
-    }
-
-    private async waitForHostConfirmation(
-        response: InteractionResponse,
-        joined: JoinedBattle,
-    ): Promise<StartedBattle | undefined> {
-        await joined.interaction.update({
-            embeds: [buildConfirmEmbed({
-                request: this.request,
-                playerOneName: this.host.name,
-                playerTwoName: joined.player.name,
-            })],
-            components: buildConfirmComponents().map(row => row.toJSON()),
-        });
-
-        return new Promise(resolve => {
-            let settled = false;
-            const allowedUserIds = [this.host.user.id, joined.player.user.id];
-            const collector = response.createMessageComponentCollector({
-                filter: interaction => allowedUserIds.includes(interaction.user.id),
-                time: CONFIRM_TIMEOUT_MS,
-            });
-
-            collector.on('collect', async interaction => {
-                if (interaction.customId === START_BATTLE_ID) {
-                    if (interaction.user.id !== this.host.user.id) {
-                        await interaction.reply({content: 'Only the host can start the battle', flags: MessageFlags.Ephemeral});
-                        return;
-                    }
-
-                    settled = true;
-                    collector.stop('battle_started');
-                    resolve({interaction});
+                if (players.length >= MAX_BATTLE_PLAYERS) {
+                    await interaction.reply({content: 'This battle is already full', flags: MessageFlags.Ephemeral});
                     return;
                 }
 
-                if (interaction.customId === CANCEL_BATTLE_ID) {
-                    if (interaction.user.id !== this.host.user.id) {
-                        await interaction.reply({content: 'Only the host can cancel the battle', flags: MessageFlags.Ephemeral});
-                        return;
-                    }
+                const joiner = await this.validateJoiner(interaction, players);
+                if (joiner === undefined) return;
 
-                    settled = true;
-                    await interaction.update({
-                        embeds: [buildCancelledEmbed(`${this.host.name} VS. ${joined.player.name}`)],
-                        components: [],
-                    });
-                    collector.stop('battle_canceled');
-                    resolve(undefined);
-                }
+                players.push(joiner);
+                this.reservePlayer(joiner.user.id);
+                await interaction.update({
+                    embeds: [buildJoinEmbed({
+                        request: this.request,
+                        players,
+                        latestJoinedName: joiner.name,
+                    })],
+                    components: buildJoinComponents(players.length).map(row => row.toJSON()),
+                });
             });
 
             collector.on('end', async (_, reason) => {
                 if (!settled && reason === 'time') {
                     settled = true;
                     await this.interaction.editReply({
-                        embeds: [buildCancelledEmbed(`${this.host.name} VS. ${joined.player.name}`)],
+                        embeds: players.length < MIN_BATTLE_PLAYERS
+                            ? [buildJoinTimedOutEmbed(this.host.name)]
+                            : [buildCancelledEmbed(this.formatBattleTitle(players))],
                         components: [],
                     });
                     resolve(undefined);
@@ -190,16 +162,15 @@ export class BattleSession {
     private async runBattle(
         response: InteractionResponse,
         started: StartedBattle,
-        challenger: BattlePlayer,
     ): Promise<void> {
         const minSongPlayId = await getMaxSongPlayDataId();
-        await this.replaceFavouriteSongs(this.host.baid);
-        await this.replaceFavouriteSongs(challenger.baid);
+        for (const player of started.players) {
+            await this.replaceFavouriteSongs(player.baid);
+        }
 
         const context = {
             request: this.request,
-            playerOneName: this.host.name,
-            playerTwoName: challenger.name,
+            players: started.players,
         };
 
         await started.interaction.update({
@@ -211,32 +182,29 @@ export class BattleSession {
 
         await new Promise<void>(resolve => {
             const collector = response.createMessageComponentCollector({
-                filter: interaction => [this.host.user.id, challenger.user.id].includes(interaction.user.id),
+                filter: interaction => started.players.some(player => player.user.id === interaction.user.id),
                 time: SUBMISSION_TIMEOUT_MS,
             });
 
             collector.on('collect', async interaction => {
                 if (interaction.customId !== SUBMIT_SCORE_ID) return;
 
-                const submission = await this.getSubmission(interaction, challenger, minSongPlayId, state);
+                const submission = await this.getSubmission(interaction, started.players, minSongPlayId, state);
                 if (submission === undefined) return;
 
-                if (interaction.user.id === this.host.user.id) {
-                    state.playerOnePlay = submission;
-                } else {
-                    state.playerTwoPlay = submission;
-                }
+                state[submission.player.baid] = submission.play;
 
-                const winner = state.playerOnePlay !== undefined && state.playerTwoPlay !== undefined
+                const submittedPlays = started.players
+                    .map(player => {
+                        const play = state[player.baid];
+                        return play === undefined ? undefined : {player, play};
+                    })
+                    .filter(submission => submission !== undefined);
+                const winner = submittedPlays.length === started.players.length
                     ? getBattleWinner(
-                        state.playerOnePlay,
-                        state.playerTwoPlay,
+                        submittedPlays,
                         this.request.winCondition,
                         this.request.invertWinConditionLogic,
-                        this.host.baid,
-                        challenger.baid,
-                        this.host.name,
-                        challenger.name,
                     )
                     : undefined;
 
@@ -246,7 +214,7 @@ export class BattleSession {
                 });
 
                 if (winner !== undefined) {
-                    await addBattle(this.request.uniqueId, this.host.baid, challenger.baid, winner.winnerBaid);
+                    await addBattle(this.request.uniqueId, started.players.map(player => player.baid), winner.winnerBaid);
                     collector.stop('battle_finished');
                 }
             });
@@ -254,7 +222,7 @@ export class BattleSession {
             collector.on('end', async (_, reason) => {
                 if (reason === 'time') {
                     await this.interaction.editReply({
-                        embeds: [buildSubmissionTimedOutEmbed(this.host.name, challenger.name)],
+                        embeds: [buildSubmissionTimedOutEmbed(started.players)],
                         components: [],
                     });
                 }
@@ -263,9 +231,12 @@ export class BattleSession {
         });
     }
 
-    private async validateJoiner(interaction: MessageComponentInteraction): Promise<BattlePlayer | undefined> {
-        if (interaction.user.id === this.host.user.id) {
-            await interaction.reply({content: 'You can\'t join your own battle!', flags: MessageFlags.Ephemeral});
+    private async validateJoiner(
+        interaction: MessageComponentInteraction,
+        players: BattlePlayer[],
+    ): Promise<BattlePlayer | undefined> {
+        if (players.some(player => player.user.id === interaction.user.id)) {
+            await interaction.reply({content: 'You are already in this battle!', flags: MessageFlags.Ephemeral});
             return undefined;
         }
 
@@ -295,26 +266,33 @@ export class BattleSession {
 
     private async getSubmission(
         interaction: MessageComponentInteraction,
-        challenger: BattlePlayer,
+        players: BattlePlayer[],
         minSongPlayId: number,
         state: BattleSubmissionState,
-    ): Promise<SongPlay | undefined> {
-        const isHost = interaction.user.id === this.host.user.id;
-        if ((isHost && state.playerOnePlay !== undefined) || (!isHost && state.playerTwoPlay !== undefined)) {
+    ): Promise<{player: BattlePlayer; play: SongPlay} | undefined> {
+        const player = players.find(battlePlayer => battlePlayer.user.id === interaction.user.id);
+        if (player === undefined) {
+            await interaction.reply({content: 'You are not in this battle', flags: MessageFlags.Ephemeral});
+            return undefined;
+        }
+
+        if (state[player.baid] !== undefined) {
             await interaction.reply({content: 'You already submitted a score', flags: MessageFlags.Ephemeral});
             return undefined;
         }
 
-        const baid = isHost ? this.host.baid : challenger.baid;
-        const songPlay = await getLatestUserPlay(baid, this.request.uniqueId, this.request.difficulty);
+        const songPlay = await getLatestUserPlay(player.baid, this.request.uniqueId, this.request.difficulty);
         if (songPlay === undefined || songPlay.id <= minSongPlayId) {
             await interaction.reply({content: 'No score submitted', flags: MessageFlags.Ephemeral});
             return undefined;
         }
 
         return {
-            ...songPlay,
-            accuracy: calculateAccuracy(songPlay, this.request.noteCount),
+            player,
+            play: {
+                ...songPlay,
+                accuracy: calculateAccuracy(songPlay, this.request.noteCount),
+            },
         };
     }
 
@@ -332,23 +310,30 @@ export class BattleSession {
 
     private async replaceFavouriteSongs(baid: number): Promise<void> {
         const original = await getFavouriteSongsArray(baid);
-        this.originalFavouriteSongs.set(baid, this.cleanFavouriteSongs(original ?? []));
+        this.originalFavouriteSongs.set(baid, original ?? []);
         await setFavouriteSongsArray(baid, [this.request.uniqueId]);
     }
 
     private async restoreFavouriteSongs(): Promise<void> {
-        for (const [baid, songs] of this.originalFavouriteSongs.entries()) {
-            await setFavouriteSongsArray(baid, songs);
-        }
-        this.originalFavouriteSongs.clear();
+        this.restorePromise ??= this.restoreFavouriteSongsOnce();
+        await this.restorePromise;
     }
 
-    private cleanFavouriteSongs(songs: number[]): number[] {
-        if (!songs.some(song => !Number.isFinite(song))) {
-            return songs;
+    private async restoreFavouriteSongsOnce(): Promise<void> {
+        try {
+            for (const [baid, songs] of this.originalFavouriteSongs.entries()) {
+                await setFavouriteSongsArray(baid, songs);
+            }
+        } finally {
+            this.originalFavouriteSongs.clear();
+        }
+    }
+
+    private formatBattleTitle(players: BattlePlayer[]): string {
+        if (players.length === 1) {
+            return `${players[0].name} VS. ???`;
         }
 
-        logger.warn(`Favourite songs array contains invalid number(s): ${songs}`);
-        return songs.filter(song => Number.isFinite(song));
+        return players.map(player => player.name).join(' VS. ');
     }
 }

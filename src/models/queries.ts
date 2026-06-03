@@ -89,7 +89,7 @@ export type BattleStats = {
 }
 
 export type BattleLog = {
-    opponent_baid: number;
+    opponent_baids: number[];
     winner_baid: number;
     battle_at: Date;
 }

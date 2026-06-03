@@ -77,12 +77,21 @@ async function execute(interaction: ChatInputCommandInteractionExtended) {
     description += `\nBattles Won: ${battleStats.battles_won}`
     description += '\n\nBattle Log:'
     if (latestBattles.length > 0) {
+        const donNameCache = new Map<number, string>();
+        donNameCache.set(baid, userDonName);
+        if (opponentBaid !== undefined && opponentDonName !== undefined) {
+            donNameCache.set(opponentBaid, opponentDonName);
+        }
+
         for (const i in latestBattles) {
             const unixSeconds = Math.floor(latestBattles[i].battle_at.getTime() / 1000);
-            if (opponentBaid != latestBattles[i].opponent_baid) {
-                opponentDonName = await getMyDonName(latestBattles[i].opponent_baid)
-            }
-            description += `\n${(page - 1) * PAGE_LIMIT + parseInt(i) + 1}. ${userDonName} vs ${opponentDonName}: **${latestBattles[i].winner_baid == baid ? '🟢 WON' : '🔴 LOST'}** at <t:${unixSeconds}:f>`
+            const opponentNames = await getDonNames(latestBattles[i].opponent_baids, donNameCache);
+            const result = latestBattles[i].winner_baid === baid
+                ? '🟢 WON'
+                : latestBattles[i].winner_baid === -1
+                    ? '⚪ DRAW'
+                    : '🔴 LOST';
+            description += `\n${(page - 1) * PAGE_LIMIT + parseInt(i) + 1}. ${userDonName} vs ${opponentNames.join(' vs ')}: **${result}** at <t:${unixSeconds}:f>`
         }
     } else {
         description += '\nNo Battles Found'
@@ -110,3 +119,20 @@ export const command: Command = {
     data,
     execute
 };
+
+async function getDonNames(baids: number[], cache: Map<number, string>): Promise<string[]> {
+    const names: string[] = [];
+    for (const baid of baids) {
+        const cachedName = cache.get(baid);
+        if (cachedName !== undefined) {
+            names.push(cachedName);
+            continue;
+        }
+
+        const donName = await getMyDonName(baid) ?? `BAID ${baid}`;
+        cache.set(baid, donName);
+        names.push(donName);
+    }
+
+    return names;
+}
