@@ -20,19 +20,12 @@ export type BattleRequest = {
     invertWinConditionLogic: boolean;
 };
 
-export type JoinedBattle = {
-    interaction: MessageComponentInteraction;
-    player: BattlePlayer;
-};
-
 export type StartedBattle = {
     interaction: MessageComponentInteraction;
+    players: BattlePlayer[];
 };
 
-export type BattleSubmissionState = {
-    playerOnePlay?: SongPlay;
-    playerTwoPlay?: SongPlay;
-};
+export type BattleSubmissionState = Record<number, SongPlay>;
 
 export type BattleWinner = {
     winnerBaid: number;

@@ -53,6 +53,8 @@ export interface Battle {
     id: Generated<Int8>;
     player_one_baid: Int8;
     player_two_baid: Int8;
+    player_three_baid: Int8 | null;
+    player_four_baid: Int8 | null;
     song_number: Int8;
     winner_baid: Int8;
     battle_at: Timestamp;
