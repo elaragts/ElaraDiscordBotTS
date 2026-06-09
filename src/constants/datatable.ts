@@ -23,3 +23,6 @@ export enum Genre {
     VARIETY = 6,
     CLASSICAL = 7
 }
+
+export const MINIMUM_SONG_STAR = 1;
+export const MAXIMUM_SONG_STAR = 10;

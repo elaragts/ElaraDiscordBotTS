@@ -1,6 +1,6 @@
 ﻿import fs from 'node:fs';
-import {InternalDifficultyItem, MusicinfoItem, SongInfo} from '@models/datatable.js';
-import {Difficulty, Language, songResultSeparator} from '@constants/datatable.js';
+import {InternalDifficultyItem, MusicinfoItem, RandomChartResult, SongInfo} from '@models/datatable.js';
+import {Difficulty, Language, MAXIMUM_SONG_STAR, MINIMUM_SONG_STAR, songResultSeparator} from '@constants/datatable.js';
 import config from '#config' with {type: 'json'};
 import {SearchSongResult} from '@models/discord.js';
 
@@ -8,6 +8,7 @@ const songTitles: Map<number, [string, string]> = new Map();
 const musicinfo: Map<number, MusicinfoItem> = new Map();
 const songIdMap: Map<string, number> = new Map();
 const internalDifficulty: Map<number, Map<Difficulty, InternalDifficultyItem>> = new Map();
+const songOniStarUniqueIdMap: Map<number, number[]> = new Map();
 
 
 export function initializeDatatable() {
@@ -39,7 +40,7 @@ function initializeMusicInfo() {
 
     for (const item of parsedMusicinfo.items) {
         if (lockedSongsSet.has(item['uniqueId'])) continue;
-        musicinfo.set(item['uniqueId'], {
+        const musicinfoItem: MusicinfoItem = {
             id: item['id'],
             uniqueId: item['uniqueId'],
             stars: {
@@ -58,7 +59,16 @@ function initializeMusicInfo() {
             },
             genreNo: item['genreNo'],
             papamama: item['papamama']
-        });
+        };
+        musicinfo.set(item['uniqueId'], musicinfoItem);
+        for (let difficulty = Difficulty.ONI; difficulty <= Difficulty.URA; difficulty++) {
+            const star = musicinfoItem['stars'][difficulty];
+            if (star === undefined || star < MINIMUM_SONG_STAR || star > MAXIMUM_SONG_STAR) continue;
+            if (!songOniStarUniqueIdMap.has(star)) {
+                songOniStarUniqueIdMap.set(star, []);
+            }
+            songOniStarUniqueIdMap.get(star)!.push(musicinfoItem.uniqueId);
+        }
         songIdMap.set(item['id'], item['uniqueId']);
     }
 }
@@ -95,7 +105,7 @@ function initializeWordlist() {
     }
 }
 
-export function initializeInternalDifficulties()  {
+export function initializeInternalDifficulties() {
     let rawData: string;
 
     try {
@@ -180,6 +190,25 @@ export function getSongInfo(uniqueId: number): SongInfo | undefined {
         songTitles: songTitleResult,
         musicinfo: musicinfo.get(uniqueId)!
     };
+}
+
+export function getRandomChart(stars: number): RandomChartResult | undefined {
+    const songs = songOniStarUniqueIdMap.get(stars);
+    if (songs === undefined) {
+        return undefined;
+    }
+    const index = Math.floor(Math.random() * songs.length);
+    const uniqueId = songs[index];
+    const songInfo = getSongInfo(uniqueId)!;
+    let difficulty = Difficulty.ONI;
+    if (songInfo.musicinfo.stars[Difficulty.ONI] === songInfo.musicinfo.stars[Difficulty.URA]) {
+        if (index > 0 && songs[index - 1] === songs[index]) { //duplicate consecutive song entry i.e. ura selected
+            difficulty = Difficulty.URA;
+        }
+    } else if (songInfo.musicinfo.stars[Difficulty.URA] === stars) {
+        difficulty = Difficulty.URA;
+    }
+    return {uniqueId, difficulty};
 }
 
 export function getSongTitle(uniqueId: number, lang: Language): string {

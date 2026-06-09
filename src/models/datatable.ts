@@ -18,6 +18,11 @@ export interface SongInfo {
     musicinfo: MusicinfoItem;
 }
 
+export interface RandomChartResult {
+    uniqueId: number;
+    difficulty: Difficulty
+}
+
 export interface InternalDifficultyItem {
     bpm: number;
     bpmChange?: string;
