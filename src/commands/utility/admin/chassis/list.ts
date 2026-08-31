@@ -1,5 +1,5 @@
 ﻿import {
-    getChassisIdFromDiscordId,
+    getChassisIdsByDiscordId,
     getDiscordIdFromChassisId,
     getUserChassisList, getUserUsedChassisList,
 } from '@database/queries/chassis.js';
@@ -41,10 +41,20 @@ export async function execute(interaction: ChatInputCommandInteraction) {
     } else {
         if (userOption) {
             discordId = userOption.id;
-            chassisId = await getChassisIdFromDiscordId(discordId);
-            if (chassisId === undefined) {
+            const chassisIds = await getChassisIdsByDiscordId(discordId);
+            if (chassisIds.length === 0) {
                 return await replyWithErrorMessage(interaction, COMMAND_NAME, `User <@${discordId}> does not have a ChassisID`);
             }
+            const offset = (page - 1) * PAGE_LIMIT;
+            const results = await Promise.all(chassisIds.map(async id => ({id, users: await getUserChassisList(id, offset)})));
+            const description = results.map(result => {
+                const users = result.users.length === 0
+                    ? 'No results found'
+                    : result.users.map((item, index) => `${offset + index + 1}. baid: \`${item.baid}\` (${item.my_don_name}) - ${item.discord_id ? `<@${item.discord_id}> - ` : ''}Last used: ${item.last_used.toDateString()}`).join('\n');
+                return `ChassisID: \`${result.id}\`\n${users}`;
+            }).join('\n\n');
+            await interaction.reply({embeds: [{description, color: EMBED_COLOUR, author: {name: COMMAND_NAME}}]});
+            return;
         } else if (chassisIdOption) {
             chassisId = chassisIdOption;
             discordId = await getDiscordIdFromChassisId(chassisId);

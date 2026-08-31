@@ -81,6 +81,10 @@ export type ChassisItem = {
     active: boolean;
     chassis_id: number;
     discord_id: string;
+    nickname: string | null;
+    secret: string | null;
+    secret_rotated_at: Date | null;
+    created_at: Date;
 }
 
 export type BattleStats = {

@@ -12,6 +12,7 @@ import {Language} from "@constants/datatable.js";
 
 export interface Command {
     data: SlashCommandOptionsOnlyBuilder | SlashCommandSubcommandsOnlyBuilder;
+    global: boolean;
     execute: (interaction: ChatInputCommandInteractionExtended) => Promise<void>;
     autocomplete?: (interaction: AutocompleteInteraction) => Promise<void>;
 }

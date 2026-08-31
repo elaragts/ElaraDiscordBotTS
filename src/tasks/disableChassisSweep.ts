@@ -1,4 +1,4 @@
-import {getAllActiveChassis, setChassisStatus} from "@database/queries/chassis.js";
+import {getAllActiveChassis, setAllChassisStatusByDiscordId} from "@database/queries/chassis.js";
 import {client} from "@bot/client.js";
 import config from '#config' with {type: 'json'};
 import {TextChannel} from "discord.js";
@@ -19,7 +19,10 @@ export async function runChassisSweep() {
         }
         const activeChassis = await getAllActiveChassis();
         let count = 0;
+        const checkedOwners = new Set<string>();
         for (const chassisItem of activeChassis) {
+            if (checkedOwners.has(chassisItem.discord_id)) continue;
+            checkedOwners.add(chassisItem.discord_id);
             let reason;
             if (/\D/.test(chassisItem.discord_id)) {
                 logger.info(`[TASK] disableChassisSweep | DiscordID ${chassisItem.discord_id} contains non-numeric characters, skipping...`)
@@ -36,22 +39,22 @@ export async function runChassisSweep() {
                 }
             }
 
-            await setChassisStatus(chassisItem.chassis_id, false);
-
-            await insertModLog({
-                action_type: ModlogTypes.DISABLE_CHASSISID,
-                mod_user_id: EGTS_BOT_MOD_USER_ID,
-                target_user_id: chassisItem.discord_id,
-                target_chassis_id: chassisItem.chassis_id,
-                reason: `Disable Chassis Sweep (${reason})`
-            });
-
-            if (channel && channel instanceof TextChannel) {
-                await channel.send({
-                    content: `Disabled <@${chassisItem.discord_id}>'s ChassisID \`${chassisItem.chassis_id}\` REASON: Chassis Sweep (${reason})`
+            const affectedChassisIds = await setAllChassisStatusByDiscordId(chassisItem.discord_id, false);
+            for (const chassisId of affectedChassisIds) {
+                await insertModLog({
+                    action_type: ModlogTypes.DISABLE_CHASSISID,
+                    mod_user_id: EGTS_BOT_MOD_USER_ID,
+                    target_user_id: chassisItem.discord_id,
+                    target_chassis_id: chassisId,
+                    reason: `Disable Chassis Sweep (${reason})`
                 });
+                if (channel && channel instanceof TextChannel) {
+                    await channel.send({
+                        content: `Disabled <@${chassisItem.discord_id}>'s ChassisID \`${chassisId}\` REASON: Chassis Sweep (${reason})`
+                    });
+                }
+                count++;
             }
-            count++;
         }
         const seconds = ((Date.now() - start) / 1000).toFixed(2);
         logger.info(`[TASK] disableChassisSweep | Finished Disable Chassis Sweep, Checked ${activeChassis.length}, Disabled ${count} chassisID, took ${seconds} seconds`);

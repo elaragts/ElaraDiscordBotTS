@@ -63,12 +63,38 @@ export interface Battle {
 export interface Card {
     access_code: string;
     baid: Int8;
+    created_at: Generated<Timestamp>;
 }
 
 export interface Chassis {
     active: boolean;
     chassis_id: Numeric;
+    created_at: Generated<Timestamp>;
+    custom_client: Generated<boolean>;
+    dan_version: Generated<string>;
     discord_id: string;
+    enabled_movie: Generated<ArrayType<Int8>>;
+    ignore_lock_when_disabled: Generated<boolean>;
+    nickname: string | null;
+    secret: string | null;
+    secret_rotated_at: Timestamp | null;
+}
+
+export interface ChassisShopCredential {
+    chassis_id: Numeric;
+    current_expires_at: Timestamp;
+    current_issued_at: Timestamp;
+    current_shop_id: string;
+    generation: Generated<Int8>;
+    lease_acquired_at: Timestamp | null;
+    lease_expires_at: Timestamp | null;
+    lease_last_renewed_at: Timestamp | null;
+    lease_session_id: string | null;
+    lease_token_hash: Buffer | null;
+    previous_accept_until: Timestamp | null;
+    previous_shop_id: string | null;
+    revoked_at: Timestamp | null;
+    updated_at: Generated<Timestamp>;
 }
 
 export interface Credential {
@@ -104,6 +130,11 @@ export interface DanStageScoreData {
     version: Generated<string>;
 }
 
+export interface DiscordChassisLimit {
+    discord_id: string;
+    max_chassis_count: Generated<number>;
+}
+
 export interface ModLog {
     action_type: string;
     created_at: Generated<Timestamp>;
@@ -111,7 +142,18 @@ export interface ModLog {
     mod_user_id: string;
     reason: string | null;
     target_chassis_id: Numeric | null;
+    target_shop_id: string | null;
     target_user_id: string;
+}
+
+export interface ShopChassis {
+    chassis_id: Numeric;
+    expires_at: Generated<Timestamp>;
+    id: Generated<number>;
+    issued_at: Generated<Timestamp>;
+    last_used: Timestamp | null;
+    revoked_at: Timestamp | null;
+    shop_id: string;
 }
 
 export interface SongBestData {
@@ -135,6 +177,8 @@ export interface SongPlayData {
     id: Generated<Int8>;
     miss_count: Int8;
     ok_count: Int8;
+    option_setting: Generated<Int8>;
+    play_duration: Generated<Int8>;
     play_time: Timestamp;
     score: Int8;
     score_rank: number;
@@ -179,6 +223,7 @@ export interface UserData {
     color_body: Int8;
     color_face: Int8;
     color_limb: Int8;
+    created_at: Generated<Timestamp>;
     current_body: Int8;
     current_face: Int8;
     current_head: Int8;
@@ -192,7 +237,9 @@ export interface UserData {
     difficulty_setting_star: Int8;
     display_achievement: boolean;
     display_dan: boolean;
+    display_sou_uchi: Generated<boolean>;
     favorite_songs_array: ArrayType<Int8>;
+    freely_toggle_special_songs: Generated<boolean>;
     generic_info_flg_array: ArrayType<Int8>;
     is_admin: boolean;
     is_skip_on: boolean;
@@ -208,6 +255,9 @@ export interface UserData {
     title_flg_array: ArrayType<Int8>;
     title_plate_id: Int8;
     tone_flg_array: ArrayType<Int8>;
+    unlock_outside_nijiiro_songs: Generated<boolean>;
+    unlock_sayonara_songs: Generated<boolean>;
+    unlock_sousaku_songs: Generated<boolean>;
     unlocked_body: ArrayType<Int8>;
     unlocked_face: ArrayType<Int8>;
     unlocked_head: ArrayType<Int8>;
@@ -254,6 +304,11 @@ export interface UserRatingHistory {
     rating_date: Timestamp;
 }
 
+export interface UserRival {
+    baid: Int8;
+    rival_baid: Int8;
+}
+
 export interface DB {
     __EFMigrationsHistory: _EFMigrationsHistory;
     ai_score_data: AiScoreData;
@@ -261,10 +316,13 @@ export interface DB {
     battle: Battle;
     card: Card;
     chassis: Chassis;
+    chassis_shop_credential: ChassisShopCredential;
     credential: Credential;
     dan_score_data: DanScoreData;
     dan_stage_score_data: DanStageScoreData;
+    discord_chassis_limit: DiscordChassisLimit;
     mod_log: ModLog;
+    shop_chassis: ShopChassis;
     song_best_data: SongBestData;
     song_play_data: SongPlayData;
     token: Token;
@@ -274,6 +332,7 @@ export interface DB {
     user_discord: UserDiscord;
     user_rating_history: UserRatingHistory;
     user_rating_summary: UserRatingSummary;
+    user_rival: UserRival;
     user_song_rate: UserSongRate;
     user_top_50: UserTop50;
 }

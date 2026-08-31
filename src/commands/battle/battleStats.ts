@@ -117,7 +117,8 @@ async function execute(interaction: ChatInputCommandInteractionExtended) {
 
 export const command: Command = {
     data,
-    execute
+    execute,
+    global: true
 };
 
 async function getDonNames(baids: number[], cache: Map<number, string>): Promise<string[]> {

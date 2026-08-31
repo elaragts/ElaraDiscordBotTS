@@ -1,5 +1,5 @@
 ﻿import {
-    getChassisIdFromDiscordId,
+    getChassisIdsByDiscordId,
     getDiscordIdFromChassisId,
     setChassisStatus
 } from '@database/queries/chassis.js';
@@ -18,10 +18,14 @@ export async function execute(interaction: ChatInputCommandInteraction) {
 
     if (userOption) {
         discordId = userOption.id;
-        chassisId = await getChassisIdFromDiscordId(discordId);
-        if (chassisId === undefined) {
+        const chassisIds = await getChassisIdsByDiscordId(discordId);
+        if (chassisIds.length === 0) {
             return await replyWithErrorMessage(interaction, COMMAND_NAME, `User <@${discordId}> does not have a ChassisID`);
         }
+        if (chassisIds.length > 1) {
+            return await replyWithErrorMessage(interaction, COMMAND_NAME, 'This user owns multiple chassis; specify a Chassis ID.');
+        }
+        chassisId = chassisIds[0];
     } else if (chassisIdOption) {
         chassisId = chassisIdOption;
         discordId = await getDiscordIdFromChassisId(chassisId);

@@ -6,9 +6,8 @@
     InteractionContextType,
     MessageFlags, MessageReaction, PartialGuildMember, PartialMessageReaction, PartialUser, User
 } from 'discord.js';
-import {Command, ClientExtended} from '@models/discord.js';
+import {ClientExtended} from '@models/discord.js';
 import path from 'node:path';
-import {readdir} from "fs/promises";
 import logger from '@utils/logger.js';
 import config from '#config' with {type: 'json'};
 
@@ -18,13 +17,14 @@ import {
     safeGetSubcommand,
     replyWithErrorMessage
 } from '@utils/discord.js';
-import {fileURLToPath, pathToFileURL} from 'url';
+import {fileURLToPath} from 'url';
 import {
     handleEgtsGuildMemberRemove,
     handleEgtsGuildMemberUpdate,
     handleEgtsMessageReactionAdd
 } from "../events/egtsGuildEvents.js";
 import {startTasks} from "../tasks/index.js";
+import {discoverCommands} from '@utils/commandDiscovery.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -73,27 +73,12 @@ export async function registerHandlers(client: ClientExtended) {
 
     client.commands = new Collection();
     const foldersPath = path.join(__dirname, "..", "commands");
-    const commandFolders = await readdir(foldersPath);
-
-    for (const folder of commandFolders) {
-        const commandsPath = path.join(foldersPath, folder);
-        const commandFiles = (await readdir(commandsPath)).filter(file => file.endsWith(".ts") || file.endsWith(".js"));
-
-        for (const file of commandFiles) {
-            const filePath = path.join(commandsPath, file);
-            const module = await import(pathToFileURL(filePath).href);
-            const command: Command = module.command;
-
-            if (command) {
-                client.commands.set(command.data.name, command);
-            } else {
-                logger.warn(`The command at ${filePath} is missing a required "data" or "execute" property.`);
-            }
+    for (const {command, filePath} of await discoverCommands(foldersPath)) {
+        if (client.commands.has(command.data.name)) {
+            throw new Error(`Duplicate command name ${command.data.name} discovered at ${filePath}`);
         }
+        client.commands.set(command.data.name, command);
     }
-
-    const adminModule = await import("../commands/utility/admin/index.js");
-    client.commands.set("admin", adminModule.command);
 }
 
 
