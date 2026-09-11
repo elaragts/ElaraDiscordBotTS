@@ -8,7 +8,7 @@ import {
     User
 } from "discord.js";
 import config from '#config' with {type: 'json'};
-import {getChassisIdFromDiscordId, getChassisIdStatus, setChassisStatus} from "@database/queries/chassis.js";
+import {setAllChassisStatusByDiscordId} from "@database/queries/chassis.js";
 import {client} from "@bot/client.js";
 import logger from "@utils/logger.js";
 import {insertModLog} from "@database/queries/modlog.js";
@@ -32,59 +32,46 @@ export async function handleEgtsGuildMemberUpdate(oldGuildMember: GuildMember | 
 }
 
 async function disableChassisIfActive(memberId: string, reason: string) {
-    const chassisId = await getChassisIdFromDiscordId(memberId);
-    if (chassisId === undefined || !(await getChassisIdStatus(chassisId))) {
-        return;
-    }
-
-    await setChassisStatus(chassisId, false);
-    await insertModLog({
+    const chassisIds = await setAllChassisStatusByDiscordId(memberId, false);
+    if (chassisIds.length === 0) return;
+    await Promise.all(chassisIds.map(chassisId => insertModLog({
         action_type: ModlogTypes.DISABLE_CHASSISID,
         mod_user_id: EGTS_BOT_MOD_USER_ID,
         target_user_id: memberId,
         target_chassis_id: chassisId,
-        reason: 'Donder role removed'
-    });
+        reason
+    })));
 
     const channel = client.channels.cache.get(config.modlogChannelId);
     if (channel === undefined || !(channel instanceof TextChannel)) {
         logger.error({}, 'Invalid modlog channel');
         return;
     }
-    await channel.send({
-        content: `Disabled <@${memberId}>'s ChassisID \`${chassisId}\` REASON: ${reason}`
-    });
+    for (const chassisId of chassisIds) {
+        await channel.send({content: `Disabled <@${memberId}>'s ChassisID \`${chassisId}\` REASON: ${reason}`});
+    }
 }
 
 async function enableChassisIfDisabled(memberId: string, reason: string) {
-    const chassisId = await getChassisIdFromDiscordId(memberId);
-    if (chassisId === undefined) {
-        return;
-    }
+    const chassisIds = await setAllChassisStatusByDiscordId(memberId, true);
+    if (chassisIds.length === 0) return;
     const channel = client.channels.cache.get(config.modlogChannelId);
     const invalidChannel = channel === undefined || !(channel instanceof TextChannel);
-    if (await getChassisIdStatus(chassisId) && !invalidChannel) {
-        await channel.send({
-            content: `WARNING: <@${memberId}>'s ChassisID \`${chassisId}\` was already enabled`,
-        });
-        return;
-    }
-    await setChassisStatus(chassisId, true);
-    await insertModLog({
+    await Promise.all(chassisIds.map(chassisId => insertModLog({
         action_type: ModlogTypes.ENABLE_CHASSISID,
         mod_user_id: EGTS_BOT_MOD_USER_ID,
         target_user_id: memberId,
         target_chassis_id: chassisId,
-        reason: 'Donder role added'
-    });
+        reason
+    })));
 
     if (invalidChannel) {
         logger.error({}, 'Invalid modlog channel');
         return;
     }
-    await channel.send({
-        content: `Enabled <@${memberId}>'s ChassisID \`${chassisId}\` REASON: ${reason}`
-    });
+    for (const chassisId of chassisIds) {
+        await channel.send({content: `Enabled <@${memberId}>'s ChassisID \`${chassisId}\` REASON: ${reason}`});
+    }
 }
 
 export async function handleEgtsMessageReactionAdd(reaction: MessageReaction | PartialMessageReaction, user: User | PartialUser) {

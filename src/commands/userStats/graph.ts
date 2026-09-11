@@ -318,5 +318,6 @@ async function getRatingGraphConfig(baid: number, startDate: Date, endDate: Date
 
 export const command: Command = {
     data,
-    execute
+    execute,
+    global: true
 };

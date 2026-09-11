@@ -65,5 +65,6 @@ execute(interaction: ChatInputCommandInteractionExtended) {
 export const command: Command = {
     data,
     execute,
-    autocomplete
+    autocomplete,
+    global: true
 };
