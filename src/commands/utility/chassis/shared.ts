@@ -14,10 +14,10 @@ export function validateNickname(value: string | null): {nickname: string | null
     if (value === null) return {nickname: null};
     const nickname = value.trim();
     if (nickname.length < 1 || nickname.length > 32) {
-        return {nickname: null, error: 'Nickname must be between 1 and 32 characters after trimming.'};
+        return {nickname: null, error: 'Nickname must be between 1 and 32 characters.'};
     }
     if (NICKNAME_CONTROL_CHARACTER.test(nickname) || MASS_MENTION.test(nickname)) {
-        return {nickname: null, error: 'Nickname cannot contain control characters or Discord mass mentions.'};
+        return {nickname: null, error: 'Invalid Nickname.'};
     }
     return {nickname};
 }
@@ -39,7 +39,7 @@ export async function ensureRegistrationEligibility(interaction: ChatInputComman
 
 export function secretResponse(title: string, secret: string, chassisId: number, active = true): string {
     let response = `**${title}**\nSecret: \`${secret}\`\n\nSave this secret now. It cannot be viewed again. If you lose it, use \`/chassis reset-secret\`.\n\n**Management**\nChassis ID: \`${chassisId}\``;
-    if (!active) response += '\nStatus: Disabled\n\nResetting the secret does not enable this chassis.';
+    if (!active) response += '\nStatus: Disabled';
     return response;
 }
 

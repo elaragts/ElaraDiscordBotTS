@@ -34,7 +34,7 @@ export async function execute(interaction: ChatInputCommandInteractionExtended):
     await interaction.reply({
         embeds: [chassisEmbed(updated.nickname
             ? `Chassis ID: \`${chassisId}\`\nNickname: ${updated.nickname}`
-            : `Chassis ID: \`${chassisId}\`\nNickname removed.`)],
+            : `Chassis ID: \`${chassisId}\`\nNickname removed`)],
         allowedMentions: {parse: []},
         flags: MessageFlags.Ephemeral
     });
